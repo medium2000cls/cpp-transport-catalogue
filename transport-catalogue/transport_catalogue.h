@@ -101,8 +101,8 @@ protected:
     
 public:
     TransportCatalogue() = default;
-    Bus* InsertBus(Bus bus);
-    Stop* InsertStop(Stop stop);
+    Bus* InsertBus(const Bus& bus);
+    Stop* InsertStop(const Stop& stop);
     std::optional<const Bus*> FindBus(const std::string_view& name) const;
     std::optional<const Stop*> FindStop(const std::string_view& name) const;
     std::optional<BusInfo> GetBusInfo(const Bus* bus) const;

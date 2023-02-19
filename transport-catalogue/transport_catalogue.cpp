@@ -90,7 +90,7 @@ std::vector<const Bus*> TransportCatalogue::GetBusesByStop(const Stop* stop) con
 
 //region Public section TransportCatalogue
 
-Bus* TransportCatalogue::InsertBus(Bus bus) {
+Bus* TransportCatalogue::InsertBus(const Bus& bus) {
     Bus* bus_ptr;
     if (bus_name_catalog_.count(bus.name)) {
         bus_ptr = bus_name_catalog_.at(bus.name);
@@ -99,7 +99,7 @@ Bus* TransportCatalogue::InsertBus(Bus bus) {
         AddBusInStopBusesCatalog(bus_ptr);
     }
     else {
-        bus_catalog_.push_back(std::forward<Bus>(bus));
+        bus_catalog_.push_back(bus);
         bus_ptr = &bus_catalog_.back();
         bus_name_catalog_.insert({bus_ptr->name, bus_ptr});
         AddBusInStopBusesCatalog(bus_ptr);
@@ -107,7 +107,7 @@ Bus* TransportCatalogue::InsertBus(Bus bus) {
     return bus_ptr;
 }
 
-Stop* TransportCatalogue::InsertStop(Stop stop) {
+Stop* TransportCatalogue::InsertStop(const Stop& stop) {
     Stop* stop_ptr;
     if (!stop_name_catalog_.count(stop.name)) {
         stop_catalog_.push_back(stop);
