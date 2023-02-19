@@ -38,6 +38,9 @@ inline auto extract_sub_str = [](std::string_view& str, const std::string& separ
 };
 
 void StreamInputReader::Load() {
+    std::vector<std::string> stop_requests;
+    std::vector<std::string> bus_requests;
+    
     std::string str;
     std::getline(input_stream_, str);
     size_t count_str = std::stoul(str);
@@ -48,12 +51,19 @@ void StreamInputReader::Load() {
         
         std::string code_str = extract_sub_str(str_view, " ");
         if (code_str == "Stop") {
-            AddStopByDescription(str_view);
+            stop_requests.emplace_back(str_view);
         }
         else if (code_str == "Bus") {
-            AddBusByDescription(str_view);
+            bus_requests.emplace_back(str_view);
         }
     }
+    
+    for_each(stop_requests.begin(),stop_requests.end(), [this](const std::string& str){
+        AddStopByDescription(str);
+    });
+    for_each(bus_requests.begin(),bus_requests.end(), [this](const std::string& str){
+        AddBusByDescription(str);
+    });
 }
 
 void StreamInputReader::AddStopByDescription(std::string_view str_view) {
@@ -92,7 +102,9 @@ void StreamInputReader::AddBusByDescription(std::string_view str_view) {
         std::move(backward_route.begin(), backward_route.end(),
                 std::back_insert_iterator<std::vector<const Core::Stop*>>(route));
     }
-    catalogue_.InsertBus(Core::Bus(bus_name, route));
+    double calc_dist = catalogue_.GetBusCalculateLength(route);
+    double real_dist = catalogue_.GetBusRealLength(route);
+    catalogue_.InsertBus(Core::Bus(bus_name, route, calc_dist, real_dist));
 }
 
 }

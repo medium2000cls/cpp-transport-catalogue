@@ -30,7 +30,10 @@ struct Bus {
     std::string name;
     std::vector<const Stop*> route;
     size_t unique_stops_count;
-    explicit Bus(std::string  name, const std::vector<const Stop*>& route);
+    //Маршруты теперь хранят длины пути
+    double calc_length;
+    double real_length;
+    explicit Bus(std::string  name, const std::vector<const Stop*>& route, double calc_length, double real_length);
     ~Bus() = default;
     Bus(const Bus& other);
     Bus& operator= (const Bus& other);
@@ -79,7 +82,6 @@ class TransportCatalogue {
     void AddBusInStopBusesCatalog(const Bus* bus);
     void EraseBusInStopBusesCatalog(const Bus* bus);
     
-    double GetBusCalculateLength(const std::vector<const Stop*>& route) const;
     std::vector<const Bus*> GetBusesByStop(const Stop* stop) const;
     
     template<typename Comparator>
@@ -97,7 +99,6 @@ protected:
     std::deque<Bus> bus_catalog_;
     std::deque<Stop> stop_catalog_;
     
-    double GetBusRealLength(const std::vector<const Stop*>& route) const;
 public:
     TransportCatalogue() = default;
     Bus* InsertBus(Bus bus);
@@ -110,6 +111,8 @@ public:
     std::optional<StopInfo> GetStopInfo(const std::string_view& stop_name) const;
     void AddRealDistanceToCatalog(TrackSection track_section, double distance);
     void AddRealDistanceToCatalog(const Stop* left, const Stop* right, double distance);
+    double GetBusCalculateLength(const std::vector<const Stop*>& route) const;
+    double GetBusRealLength(const std::vector<const Stop*>& route) const;
     
 };
 }

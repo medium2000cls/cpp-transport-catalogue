@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.23)
-project(TransportGuide)
+project(cpp-transport-catalogue)
 
 set(CMAKE_CXX_STANDARD 17)
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wfatal-errors -O0 -Wno-unknown-pragmas -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_LIBCPP_DEBUG=1 -g")
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wfatal-errors -Ofast")
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wfatal-errors -O3")
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wfatal-errors -O0")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -static")
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")

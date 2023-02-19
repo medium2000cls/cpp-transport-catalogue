@@ -10,15 +10,20 @@
 namespace TransportGuide::Core {
 using namespace std::literals;
 
-constexpr double ACCURACY_COMPARISON = 1e-1;
+//region detail
 
-//region Private section TransportCatalogue
+constexpr double ACCURACY_COMPARISON = 1e-1;
 
 size_t TrackSectionHasher::operator()(const TrackSection& e) const {
     size_t hash_result = reinterpret_cast<size_t>(e.first) + reinterpret_cast<size_t>(e.second) * sizeof(TrackSection) * 1837;
     return hash_result;
 }
 
+//endregion
+
+//region Private section TransportCatalogue
+
+//Получаю дистанцию из каталога, если нужно считаю
 double TransportCatalogue::GetCalculatedDistance(TrackSection track_section) const {
     if (track_section.first == track_section.second) { return 0.; }
     else if (calculated_distance_catalog_.count(track_section)) {
@@ -35,6 +40,7 @@ double TransportCatalogue::GetCalculatedDistance(const Stop* left, const Stop* r
     return TransportCatalogue::GetCalculatedDistance({left, right});
 }
 
+//Считаю и добавляю дистанцию в каталог
 void TransportCatalogue::AddCalculatedDistanceToCatalog(TrackSection track_section) const {
     double distance = detail::ComputeDistance({track_section.first->latitude, track_section.first->longitude},
             {track_section.second->latitude, track_section.second->longitude});
@@ -72,40 +78,6 @@ void TransportCatalogue::EraseBusInStopBusesCatalog(const Bus* bus) {
             stop_buses_catalog_.at(stop).erase(bus);
         }
     });
-}
-
-double TransportCatalogue::GetBusCalculateLength(const std::vector<const Stop*>& route) const {
-    double route_length;
-    std::vector<double> lengths;
-    
-    std::transform(route.begin(), std::prev(route.end()), std::next(route.begin()), std::back_insert_iterator(lengths),
-            [this](const Stop* left, const Stop* right) {
-                return GetCalculatedDistance({left, right});
-            });
-    
-    route_length = std::reduce(lengths.begin(), lengths.end(), 0.0);
-    return route_length;
-}
-
-double TransportCatalogue::GetBusRealLength(const std::vector<const Stop*>& route) const {
-    double route_length;
-    std::vector<double> lengths;
-    
-    auto compute_route_dist = [this](const Stop* left, const Stop* right) {
-        std::optional<double> distance_opt = GetRealDistance({left, right});
-        if (distance_opt.has_value()) {
-            return distance_opt.value();
-        }
-        else {
-            return GetCalculatedDistance({left, right});
-        }
-    };
-    
-    std::transform(route.begin(), std::prev(route.end()), std::next(route.begin()), std::back_insert_iterator(lengths),
-            compute_route_dist);
-    
-    route_length = std::reduce(lengths.begin(), lengths.end(), 0.0);
-    return route_length;
 }
 
 std::vector<const Bus*> TransportCatalogue::GetBusesByStop(const Stop* stop) const {
@@ -176,10 +148,12 @@ std::optional<BusInfo> TransportCatalogue::GetBusInfo(const Bus* bus) const {
         bus_info.name = bus->name;
         bus_info.stops_count = bus->route.size();
         bus_info.unique_stops_count = bus->unique_stops_count;
-        double real_dist = TransportCatalogue::GetBusRealLength(bus->route);
-        double calc_dist = TransportCatalogue::GetBusCalculateLength(bus->route);
-        bus_info.length = real_dist;
-        bus_info.curvature = real_dist / calc_dist;
+        //Вынес вычисление реальной и посчитанной длин пути на этап заполнения каталога.
+        //transport-catalogue/input_reader.cpp:105,:106
+        //Маршруты теперь хранят эти данные
+        //transport-catalogue/transport_catalogue.h:34
+        bus_info.length = bus->real_length;
+        bus_info.curvature = bus->real_length / bus->calc_length;
         return bus_info;
     }
     return std::nullopt;
@@ -226,6 +200,29 @@ void TransportCatalogue::AddRealDistanceToCatalog(const Stop* left, const Stop* 
     AddRealDistanceToCatalog({left, right}, distance);
 }
 
+double TransportCatalogue::GetBusCalculateLength(const std::vector<const Stop*>& route) const {
+    //Применил стандартный алгоритм вместо промежуточного контейнера
+    auto compute_route_dist = [this](const Stop* left, const Stop* right) {
+        return GetCalculatedDistance({left, right});
+    };
+    return std::transform_reduce(route.begin(), std::prev(route.end()), std::next(route.begin()), 0., std::plus<>(),
+            compute_route_dist);
+}
+
+double TransportCatalogue::GetBusRealLength(const std::vector<const Stop*>& route) const {
+    //Применил стандартный алгоритм вместо промежуточного контейнера
+    auto compute_route_dist = [this](const Stop* left, const Stop* right) {
+        std::optional<double> distance_opt = GetRealDistance({left, right});
+        if (distance_opt.has_value()) {
+            return distance_opt.value();
+        }
+        else {
+            return GetCalculatedDistance({left, right});
+        }
+    };
+    return std::transform_reduce(route.begin(), std::prev(route.end()), std::next(route.begin()), 0., std::plus<>(),
+            compute_route_dist);
+}
 
 //endregion
 
@@ -287,8 +284,9 @@ bool Bus::operator!=(const Bus& rhs) const {
     return !(rhs == *this);
 }
 
-Bus::Bus(std::string name, const std::vector<const Stop*>& route) : name(std::move(name)), route(route) {
-    std::unordered_set<const Stop*> unique_stops (route.begin(), route.end());
+Bus::Bus(std::string name, const std::vector<const Stop*>& route, double calc_length, double real_length) : name(
+        std::move(name)), route(route), calc_length(calc_length), real_length(real_length) {
+    std::unordered_set<const Stop*> unique_stops(route.begin(), route.end());
     unique_stops_count = unique_stops.size();
 }
 
@@ -296,23 +294,28 @@ Bus::Bus(const Bus& other) {
     name = other.name;
     route = other.route;
     unique_stops_count = other.unique_stops_count;
+    calc_length = other.calc_length;
+    real_length = other.real_length;
 }
 
 Bus& Bus::operator=(const Bus& other) {
-    if (this != &other)
-    {
+    if (this != &other) {
         Bus bus(other);
         std::swap(name, bus.name);
         std::swap(route, bus.route);
         std::swap(unique_stops_count, bus.unique_stops_count);
+        std::swap(calc_length, bus.calc_length);
+        std::swap(real_length, bus.real_length);
     }
     return *this;
 }
 
 bool Bus::Update(const Bus& other) {
-    if (name == other.name){
+    if (name == other.name) {
         route = other.route;
         unique_stops_count = other.unique_stops_count;
+        calc_length = other.calc_length;
+        real_length = other.real_length;
         return true;
     }
     return false;

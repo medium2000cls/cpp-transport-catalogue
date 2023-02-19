@@ -110,7 +110,7 @@ std::deque<Core::Bus> BusGenerator(std::deque<Core::Stop>& stops, size_t count) 
         }
         route.push_back(route.front());
         
-        Core::Bus bus (name, route);
+        Core::Bus bus (name, route, 100, 200);
         result.push_back(std::move(bus));
     }
     return result;
@@ -268,12 +268,12 @@ void TransportCatalogueTests::GetBusInfo() {
     transport_catalogue.InsertStop(Core::Stop("Biryulyovo Tovarnaya", 55.592028, 37.653656));
     transport_catalogue.InsertStop(Core::Stop("Biryulyovo Passazhirskaya", 55.580999, 37.659164));
     auto& stops = transport_catalogue.GetStops();
-    transport_catalogue.InsertBus(Core::Bus("256", {&stops[3], &stops[4], &stops[5], &stops[6], &stops[7], &stops[3]}));
-    transport_catalogue.InsertBus(Core::Bus("750", {&stops[0], &stops[1], &stops[2], &stops[1], &stops[0]}));
+    transport_catalogue.InsertBus(Core::Bus("256", {&stops[3], &stops[4], &stops[5], &stops[6], &stops[7], &stops[3]}, 4371.02, 4371.02));
+    transport_catalogue.InsertBus(Core::Bus("750", {&stops[0], &stops[1], &stops[2], &stops[1], &stops[0]}, 20939.5, 20939.5));
     auto& buses = transport_catalogue.GetBuses();
     
-    TransportGuide::Core::BusInfo bus_info1 {"256", 6, 5, 4371.02};
-    TransportGuide::Core::BusInfo bus_info2 {"750", 5, 3, 20939.5};
+    TransportGuide::Core::BusInfo bus_info1 {"256", 6, 5, 4371.02, 1};
+    TransportGuide::Core::BusInfo bus_info2 {"750", 5, 3, 20939.5, 1};
     
     std::optional<Core::BusInfo> bus_info_256 = transport_catalogue.GetBusInfo(&buses[0]);
     std::optional<Core::BusInfo> bus_info_750 = transport_catalogue.GetBusInfo(&buses[1]);
@@ -296,9 +296,9 @@ void TransportCatalogueTests::GetBusInfoPlusCurvatureAdded() {
     transport_catalogue.InsertStop(Core::Stop("Rossoshanskaya ulitsa", 55.595579, 37.605757));
     transport_catalogue.InsertStop(Core::Stop("Prazhskaya", 55.611678, 37.603831));
     auto& stops = transport_catalogue.GetStops();
-    transport_catalogue.InsertBus(Core::Bus("256", {&stops[3], &stops[4], &stops[5], &stops[6], &stops[7], &stops[3]}));
-    transport_catalogue.InsertBus(Core::Bus("750", {&stops[0], &stops[1], &stops[1], &stops[2], &stops[1], &stops[1], &stops[0]}));
-    transport_catalogue.InsertBus(Core::Bus("828", {&stops[3], &stops[5], &stops[8], &stops[3]}));
+    transport_catalogue.InsertBus(Core::Bus("256", {&stops[3], &stops[4], &stops[5], &stops[6], &stops[7], &stops[3]}, 4371.02, 5950));
+    transport_catalogue.InsertBus(Core::Bus("750", {&stops[0], &stops[1], &stops[1], &stops[2], &stops[1], &stops[1], &stops[0]}, 20939.5, 27400));
+    transport_catalogue.InsertBus(Core::Bus("828", {&stops[3], &stops[5], &stops[8], &stops[3]}, 14431.0, 15500.0));
     auto& buses = transport_catalogue.GetBuses();
     transport_catalogue.AddRealDistanceToCatalog({&stops[0], &stops[1]}, 3900);
     transport_catalogue.AddRealDistanceToCatalog({&stops[1], &stops[2]}, 9900);
@@ -337,9 +337,9 @@ void TransportCatalogueTests::GetStopInfo() {
     transport_catalogue.InsertStop(Core::Stop("Rossoshanskaya ulitsa", 55.595579, 37.605757));
     transport_catalogue.InsertStop(Core::Stop("Prazhskaya", 55.611678, 37.603831));
     auto& stops = transport_catalogue.GetStops();
-    transport_catalogue.InsertBus(Core::Bus("256", {&stops[3], &stops[4], &stops[5], &stops[6], &stops[7], &stops[3]}));
-    transport_catalogue.InsertBus(Core::Bus("750", {&stops[0], &stops[1], &stops[2], &stops[1], &stops[0]}));
-    transport_catalogue.InsertBus(Core::Bus("828", {&stops[3], &stops[5], &stops[8], &stops[3]}));
+    transport_catalogue.InsertBus(Core::Bus("256", {&stops[3], &stops[4], &stops[5], &stops[6], &stops[7], &stops[3]}, 4371.02, 5950));
+    transport_catalogue.InsertBus(Core::Bus("750", {&stops[0], &stops[1], &stops[1], &stops[2], &stops[1], &stops[1], &stops[0]}, 20939.5, 27400));
+    transport_catalogue.InsertBus(Core::Bus("828", {&stops[3], &stops[5], &stops[8], &stops[3]}, 14431.0, 15500.0));
     auto& buses = transport_catalogue.GetBuses();
     
     TransportGuide::Core::StopInfo stop_info_2 {"Prazhskaya", {}};
@@ -379,7 +379,8 @@ void ConsoleInputReaderTests::Load() {
     ASSERT(stops.size() == 10);
     Core::Stop stop("Biryulyovo Tovarnaya", 55.592028, 37.653656);
     ASSERT(transport_catalogue.FindStop("Biryulyovo Tovarnaya").has_value() && *transport_catalogue.FindStop("Biryulyovo Tovarnaya").value() == stop);
-    Core::Bus bus("750", {&stops[0], &stops[1], &stops[1], &stops[2], &stops[1], &stops[1], &stops[0]});
+    
+    Core::Bus bus("750", {&stops[0], &stops[1], &stops[1], &stops[2], &stops[1], &stops[1], &stops[0]}, 20939.5, 27400);
     ASSERT((transport_catalogue.FindBus("750").has_value() && *transport_catalogue.FindBus("750").value() == bus));
     ASSERT(transport_catalogue.GetBusRealLength(transport_catalogue.FindBus("750").value()->route) == 27400);
 }
@@ -397,9 +398,9 @@ void ConsoleStatReaderTests::SendAnswer() {
     transport_catalogue.InsertStop(Core::Stop("Rossoshanskaya ulitsa", 55.595579, 37.605757));
     transport_catalogue.InsertStop(Core::Stop("Prazhskaya", 55.611678, 37.603831));
     auto& stops = transport_catalogue.GetStops();
-    transport_catalogue.InsertBus(Core::Bus("256", {&stops[3], &stops[4], &stops[5], &stops[6], &stops[7], &stops[3]}));
-    transport_catalogue.InsertBus(Core::Bus("750", {&stops[0], &stops[1], &stops[1], &stops[2], &stops[1], &stops[1], &stops[0]}));
-    transport_catalogue.InsertBus(Core::Bus("828", {&stops[3], &stops[5], &stops[8], &stops[3]}));
+    transport_catalogue.InsertBus(Core::Bus("256", {&stops[3], &stops[4], &stops[5], &stops[6], &stops[7], &stops[3]}, 4371.02, 5950));
+    transport_catalogue.InsertBus(Core::Bus("750", {&stops[0], &stops[1], &stops[1], &stops[2], &stops[1], &stops[1], &stops[0]}, 20939.5, 27400));
+    transport_catalogue.InsertBus(Core::Bus("828", {&stops[3], &stops[5], &stops[8], &stops[3]}, 14431.0, 15500.0));
     auto& buses = transport_catalogue.GetBuses();
     transport_catalogue.AddRealDistanceToCatalog({&stops[0], &stops[1]}, 3900);
     transport_catalogue.AddRealDistanceToCatalog({&stops[1], &stops[2]}, 9900);
