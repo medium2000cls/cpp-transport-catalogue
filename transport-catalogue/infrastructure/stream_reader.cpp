@@ -3,6 +3,7 @@
 #include <map>
 #include <unordered_set>
 #include <algorithm>
+#include <sstream>
 #include "stream_reader.h"
 
 namespace TransportGuide::IoRequests {
@@ -20,7 +21,7 @@ inline auto extract_sub_str = [](std::string_view& str, const std::string& separ
     sub_str.remove_prefix(sub_str.find_first_not_of(" \n"));
     sub_str.remove_suffix(sub_str.size() - sub_str.find_last_not_of(" \n") - 1);
     //std::cout << sub_str << ", ";
-    if (str.find_first_of(separator) == str.npos) {
+    if (str.find_first_of(separator) == std::string_view::npos) {
         str.remove_prefix(str.size());
     }
     else {
@@ -32,19 +33,24 @@ inline auto extract_sub_str = [](std::string_view& str, const std::string& separ
 
 
 StreamReader::StreamReader(BusinessLogic::TransportCatalogue& catalogue, std::istream& input_stream,
-        std::ostream& output_stream) : IoRequestsBase(catalogue), input_stream_(input_stream), output_stream_(
-        output_stream) {}
+        std::ostream& output_stream) : IoBase(catalogue), input_stream_(input_stream), output_stream_(
+        output_stream), input_string_stream_() {}
+
+void StreamReader::PreloadDocument() {
+    document_ = std::string (std::istreambuf_iterator<char>(input_stream_), {});
+    input_string_stream_ = std::istringstream(document_);
+}
 
 void StreamReader::LoadData() {
     std::vector<std::string> stop_requests;
     std::vector<std::string> bus_requests;
     
     std::string str;
-    std::getline(input_stream_, str);
+    std::getline(input_string_stream_, str);
     size_t count_str = std::stoul(str);
     
     for (size_t i = 0; i < count_str; ++i) {
-        std::getline(input_stream_, str);
+        std::getline(input_string_stream_, str);
         std::string_view str_view = str;
         
         std::string code_str = extract_sub_str(str_view, " ");
@@ -126,11 +132,11 @@ std::ostream& operator<< (std::ostream& o_stream, const Domain::StopInfo& stop_i
 
 void StreamReader::SendAnswer() {
     std::string str;
-    std::getline(input_stream_, str);
+    std::getline(input_string_stream_, str);
     size_t count_str = std::stoul(str);
     
     for (size_t i = 0; i < count_str; ++i) {
-        std::getline(input_stream_, str);
+        std::getline(input_string_stream_, str);
         std::string_view str_view = str;
         
         std::string code_str = extract_sub_str(str_view, " ");

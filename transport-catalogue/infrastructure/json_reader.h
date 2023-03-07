@@ -6,11 +6,14 @@
 
 namespace TransportGuide::IoRequests {
 
-class JsonReader final : public IoRequestsBase {
+class JsonReader final : public IoBase, public IRenderSettings{
 public:
     JsonReader(BusinessLogic::TransportCatalogue& catalogue, std::istream& input_stream, std::ostream& output_stream);
+    void PreloadDocument() override;
     void LoadData() override;
     void SendAnswer() override;
+    renderer::RenderSettings GetRenderSettings() override;
+
 
 private:
     std::istream& input_stream_;

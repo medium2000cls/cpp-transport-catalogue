@@ -1,10 +1,40 @@
 #include <algorithm>
 #include <regex>
+#include <iomanip>
 #include "svg.h"
 
 namespace TransportGuide::svg {
 
 using namespace std::literals;
+
+//region --------- Color ---------
+Rgb::Rgb(uint8_t red, uint8_t green, uint8_t blue) : red(red), green(green), blue(blue) {}
+Rgba::Rgba(uint8_t red, uint8_t green, uint8_t blue, double opacity): red(red), green(green), blue(blue), opacity(opacity) {}
+
+std::string RenderColorAttribute::operator()(std::monostate) const {
+    return "none";
+}
+std::string RenderColorAttribute::operator()(std::string str) const {
+    return str;
+}
+std::string RenderColorAttribute::operator()(Rgb rgb) const {
+    return "rgb("s + std::to_string(rgb.red) + ","s + std::to_string(rgb.green) + ","s + std::to_string(rgb.blue) + ")"s;
+}
+std::string RenderColorAttribute::operator()(Rgba rgba) const {
+    std::ostringstream o_str;
+    //o_str.precision(15);
+    o_str << rgba.opacity;
+    return "rgba("s + std::to_string(rgba.red) + ","s + std::to_string(rgba.green) + ","s + std::to_string(rgba.blue) + ","s + o_str.str() + ")"s;
+}
+
+std::ostream& operator<<(std::ostream &out, const Color& color) {
+    out << std::visit(RenderColorAttribute {}, color);
+    return out;
+}
+
+//endregion
+
+//region --------- Enums Stroke ---------
 
 std::ostream& operator<<(std::ostream& out, const StrokeLineCap& stroke_line_cap) {
     std::string str_out;
@@ -28,6 +58,8 @@ std::ostream& operator<<(std::ostream& out, const StrokeLineJoin& stroke_line_jo
     return out;
 }
 
+//endregion
+
 //region --------- Object ---------
 
 void Object::Render(const RenderContext& context) const {
@@ -43,12 +75,12 @@ void Object::Render(const RenderContext& context) const {
 
 //region ---------- Circle ----------
 
-Circle& Circle::SetCenter(Point center) {
+Circle& Circle::SetCenter(Point center)  {
     center_ = center;
     return *this;
 }
 
-Circle& Circle::SetRadius(double radius) {
+Circle& Circle::SetRadius(double radius)  {
     radius_ = radius;
     return *this;
 }
@@ -82,7 +114,7 @@ void Polyline::RenderObject(const RenderContext& context) const {
     }
     out << "\"";
     RenderAttrs(out);
-    out << "/> "sv;
+    out << "/>"sv;
 }
 
 //endregion

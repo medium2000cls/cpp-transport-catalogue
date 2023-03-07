@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-namespace TransportGuide::detail {
+namespace TransportGuide::Domain::geo {
 
 struct Coordinates {
     double lat;
@@ -13,6 +13,6 @@ struct Coordinates {
 };
 
 
-inline double ComputeDistance(Coordinates from, Coordinates to);
+double ComputeDistance(Coordinates from, Coordinates to);
 
 }

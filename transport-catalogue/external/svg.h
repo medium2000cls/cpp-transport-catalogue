@@ -4,16 +4,48 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <optional>
+#include <variant>
 
 namespace TransportGuide::svg {
-
+using namespace std::literals;
 class Object;
 
-using Color = std::string;
+
+struct Rgb {
+    Rgb() = default;
+    Rgb(uint8_t red, uint8_t green, uint8_t blue);
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
+};
+
+
+struct Rgba {
+    Rgba() = default;
+    Rgba(uint8_t red, uint8_t green, uint8_t blue, double opacity);
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
+    double opacity = 1.;
+};
+
+
+using Color = std::variant<std::monostate, std::string, Rgb, Rgba>;
 
 inline const Color NoneColor{"none"};
+
+struct RenderColorAttribute {
+    std::string operator() (std::monostate) const;
+    std::string operator() (std::string str) const;
+    std::string operator() (Rgb rgb) const;
+    std::string operator() (Rgba rgba) const;
+};
+
+std::ostream& operator<< (std::ostream& out, const Color& color);
+
 
 enum class StrokeLineCap {
     BUTT, ROUND, SQUARE
@@ -31,26 +63,31 @@ std::ostream& operator<<(std::ostream& out, const StrokeLineJoin& stroke_line_jo
 template<typename T>
 class PathProps {
 public:
+    /**Установить цвет заливки*/
     T& SetFillColor(Color color) {
-        fill_color_ = color;
+        fill_color_ = std::move(color);
         return AsOwner();
     }
     
+    /**Установить цвет обводки*/
     T& SetStrokeColor(Color color) {
-        stroke_color_ = color;
+        stroke_color_ = std::move(color);
         return AsOwner();
     }
     
+    /**Установить ширину обводки*/
     T& SetStrokeWidth(double width) {
         stroke_width_ = width;
         return AsOwner();
     }
     
+    /**Установить тип торца*/
     T& SetStrokeLineCap(StrokeLineCap line_cap) {
         stroke_line_cap_ = line_cap;
         return AsOwner();
     }
     
+    /**Установить тип соединения*/
     T& SetStrokeLineJoin(StrokeLineJoin line_join) {
         stroke_line_join_ = line_join;
         return AsOwner();
@@ -60,12 +97,11 @@ protected:
     ~PathProps() = default;
     
     void RenderAttrs(std::ostream& out) const {
-        using namespace std::literals;
-        if (fill_color_) {
-            out << " fill=\""sv << *fill_color_ << "\""sv;
+        if (!std::holds_alternative<std::monostate>(fill_color_)) {
+            out << " fill=\""sv << std::visit(RenderColorAttribute {}, fill_color_) << "\""sv;
         }
-        if (stroke_color_) {
-            out << " stroke=\""sv << *stroke_color_ << "\""sv;
+        if (!std::holds_alternative<std::monostate>(stroke_color_)) {
+            out << " stroke=\""sv << std::visit(RenderColorAttribute {}, stroke_color_) << "\""sv;
         }
         if (stroke_width_) {
             out << " stroke-width=\""sv << *stroke_width_ << "\""sv;
@@ -83,8 +119,8 @@ private:
         return static_cast<T&>(*this);
     }
     
-    std::optional<Color> fill_color_ = std::nullopt;
-    std::optional<Color> stroke_color_ = std::nullopt;
+    Color fill_color_ = std::monostate {};
+    Color stroke_color_ = std::monostate {};
     std::optional<double> stroke_width_ = std::nullopt;
     std::optional<StrokeLineCap> stroke_line_cap_ = std::nullopt;
     std::optional<StrokeLineJoin> stroke_line_join_ = std::nullopt;
@@ -225,9 +261,9 @@ private:
     Point pos_ = {0.0, 0.0};
     Point offset_ = {0.0, 0.0};
     uint32_t size_ = 1;
-    std::string font_family_ = "";
-    std::string font_weight_ = "";
-    std::string data_ = "";
+    std::string font_family_;
+    std::string font_weight_;
+    std::string data_;
 };
 
 

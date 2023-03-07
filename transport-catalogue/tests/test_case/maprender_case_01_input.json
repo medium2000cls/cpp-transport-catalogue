@@ -1,0 +1,95 @@
+{
+  "base_requests": [
+    {
+      "type": "Bus",
+      "name": "B1",
+      "stops": [
+        "Rivierskiy most",
+        "Morskoy vokzal",
+        "Rivierskiy most"
+      ],
+      "is_roundtrip": true
+    },
+    {
+      "type": "Bus",
+      "name": "B2",
+      "stops": [
+        "Rivierskiy most",
+        "Morskoy vokzal"
+      ],
+      "is_roundtrip": false
+    },
+    {
+      "type": "Bus",
+      "name": "B3",
+      "stops": [
+        "Morskoy vokzal",
+        "Rivierskiy most"
+      ],
+      "is_roundtrip": false
+    },
+    {
+      "type": "Stop",
+      "name": "Rivierskiy most",
+      "latitude": 43.587795,
+      "longitude": 39.716901,
+      "road_distances": {
+        "Morskoy vokzal": 850
+      }
+    },
+    {
+      "type": "Stop",
+      "name": "Morskoy vokzal",
+      "latitude": 43.581969,
+      "longitude": 39.719848,
+      "road_distances": {
+        "Rivierskiy most": 850
+      }
+    }
+  ],
+  "render_settings": {
+    "width": 600,
+    "height": 400,
+    "padding": 50,
+    "stop_radius": 5,
+    "line_width": 14,
+    "bus_label_font_size": 20,
+    "bus_label_offset": [
+      7,
+      15
+    ],
+    "stop_label_font_size": 20,
+    "stop_label_offset": [
+      7,
+      -3
+    ],
+    "underlayer_color": [
+      255,
+      255,
+      255,
+      0.573356273933182
+    ],
+    "underlayer_width": 3,
+    "color_palette": [
+      "green",
+      [255, 160, 0, 0.573356273933182],
+      "red"
+    ]
+  },
+  "stat_requests": [
+    {
+      "id": 1,
+      "type": "Map"
+    },
+    {
+      "id": 2,
+      "type": "Stop",
+      "name": "Rivierskiy most"
+    },
+    {
+      "id": 3,
+      "type": "Bus",
+      "name": "1"
+    }
+  ]
+}

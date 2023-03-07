@@ -502,8 +502,9 @@ Document Load(std::istream& input) {
 //endregion
 
 
-void Print(const Document& doc, std::ostream& output) {
-    PrintNode(output, doc.GetRoot(), PrintContext());
+void Print(const Document& doc, std::ostream& out) {
+    PrintNode(out, doc.GetRoot(), PrintContext());
+    out << std::endl;
 }
 
 }  // namespace json

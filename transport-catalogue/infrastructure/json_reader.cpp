@@ -1,18 +1,21 @@
 #include <memory>
 #include <algorithm>
+#include <cassert>
 #include "json_reader.h"
 
 namespace TransportGuide::IoRequests {
 using namespace std::literals;
 
 JsonReader::JsonReader(TransportGuide::BusinessLogic::TransportCatalogue& catalogue, std::istream& input_stream,
-        std::ostream& output_stream) : IoRequestsBase(catalogue), input_stream_(input_stream), output_stream_(
-        output_stream) {
+        std::ostream& output_stream) : IoBase(catalogue), input_stream_(input_stream), output_stream_(output_stream) {
+}
+
+void JsonReader::PreloadDocument() {
+    document_ = json::Load(input_stream_);
 }
 
 void JsonReader::LoadData() {
-    document_ = json::Load(input_stream_);
-    
+    assert(document_.GetRoot() != json::Node());
     const json::Node& root_node = document_.GetRoot();
     if (!(root_node.IsMap() && root_node.AsMap().count("base_requests"))) { return; }
     
@@ -95,7 +98,7 @@ void JsonReader::AddBusByNode(const json::Node* node_ptr) {
     std::vector<const Domain::Stop*> route;
     
     for (const auto& stop_node : node_dict.at("stops"s).AsArray()) {
-        std::string stop_name = stop_node.AsString();
+        const std::string& stop_name = stop_node.AsString();
         Domain::Stop* stop_ptr = catalogue_.InsertStop(Domain::Stop(stop_name));
         route.push_back(stop_ptr);
     }
@@ -114,6 +117,7 @@ void JsonReader::AddBusByNode(const json::Node* node_ptr) {
 }
 
 void JsonReader::SendAnswer() {
+    assert(document_.GetRoot() != json::Node());
     const auto& root_node = document_.GetRoot();
     if (!(root_node.IsMap() && root_node.AsMap().count("stat_requests"))) { return; }
     
@@ -123,7 +127,7 @@ void JsonReader::SendAnswer() {
     json::Array answer_array;
     
     for (const auto& node : stat_requests_node.AsArray()) {
-        node.IsMap() ? 0 : throw std::logic_error("Json request node must be Dictionary(key,Node)."s); //todo Modify exception text
+        node.IsMap() ? 0 : throw std::logic_error("Json request node must be Dictionary(key,Node)."s);
         
         const json::Node& type_node = node.AsMap().at("type");
         if (type_node == "Stop"s) {
@@ -132,22 +136,22 @@ void JsonReader::SendAnswer() {
         else if (type_node == "Bus"s) {
             answer_array.push_back(GetBusRequestNode(node));
         }
-        else if (type_node.IsNull()) {
-            continue;
-        }
+//        else if (type_node.IsNull()) {
+//            continue;
+//        }
         else {
             throw std::logic_error("Node key \"type\" must be count value \"Stop\" or \"Bus\"."s);
         }
     }
     
-    json::Print(json::Document(answer_array), output_stream_);
+    json::Print(json::Document(std::move(answer_array)), output_stream_);
 }
 
 json::Node JsonReader::GetStopRequestNode(const json::Node& node) {
     const json::Dict& node_dict = node.AsMap();
-    node_dict.count("id"s) ? 0 : throw std::logic_error("Json request node must be contains \"id\"."s);  //todo Modify exception text
-    node_dict.count("type"s) ? 0 : throw std::logic_error("Json request node must be contains \"type\"."s);  //todo Modify exception text
-    node_dict.count("name"s) ? 0 : throw std::logic_error("Json request node must be contains \"name\"."s);  //todo Modify exception text
+    node_dict.count("id"s) ? 0 : throw std::logic_error("Json request node must be contains \"id\"."s);
+    node_dict.count("type"s) ? 0 : throw std::logic_error("Json request node must be contains \"type\"."s);
+    node_dict.count("name"s) ? 0 : throw std::logic_error("Json request node must be contains \"name\"."s);
     
     const std::string& name = node_dict.at("name"s).AsString();
     
@@ -176,9 +180,9 @@ json::Node JsonReader::GetStopRequestNode(const json::Node& node) {
 
 json::Node JsonReader::GetBusRequestNode(const json::Node& node) {
     const json::Dict& node_dict = node.AsMap();
-    node_dict.count("id"s) ? 0 : throw std::logic_error("Json request node must be contains \"id\"."s);  //todo Modify exception text
-    node_dict.count("type"s) ? 0 : throw std::logic_error("Json request node must be contains \"type\"."s);  //todo Modify exception text
-    node_dict.count("name"s) ? 0 : throw std::logic_error("Json request node must be contains \"name\"."s);  //todo Modify exception text
+    node_dict.count("id"s) ? 0 : throw std::logic_error("Json request node must be contains \"id\"."s);
+    node_dict.count("type"s) ? 0 : throw std::logic_error("Json request node must be contains \"type\"."s);
+    node_dict.count("name"s) ? 0 : throw std::logic_error("Json request node must be contains \"name\"."s);
     
     std::string bus_name = node_dict.at("name"s).AsString();
     auto bus_info = catalogue_.GetBusInfo(bus_name);
@@ -196,5 +200,82 @@ json::Node JsonReader::GetBusRequestNode(const json::Node& node) {
         result_node["error_message"] = "not found"s;
     }
     return result_node;
+}
+
+renderer::RenderSettings JsonReader::GetRenderSettings() {
+    assert(document_.GetRoot() != json::Node());
+    
+    const json::Node& root_node = document_.GetRoot();
+    if (!(root_node.IsMap() && root_node.AsMap().count("render_settings"))) {
+        throw std::logic_error("Json document is not count \"render_settings\".");
+    }
+    
+    const json::Node& render_settings_node = root_node.AsMap().at("render_settings");
+    if (!(render_settings_node.IsMap() && !render_settings_node.AsMap().empty())) {
+        throw std::logic_error("\"render_settings\" is empty.");
+    }
+    const auto& map_render = render_settings_node.AsMap();
+    
+    svg::Color underlayer_color_variant;
+    if (map_render.at("underlayer_color").IsString()) {
+        underlayer_color_variant = map_render.at("underlayer_color").AsString();
+    }
+    else if (map_render.at("underlayer_color").IsArray()) {
+        auto array_color = map_render.at("underlayer_color").AsArray();
+        if (array_color.size() == 3) {
+            underlayer_color_variant = svg::Rgb(array_color.at(0).AsInt(), array_color.at(1).AsInt(),
+                    array_color.at(2).AsInt());
+        }
+        else if (array_color.size() == 4) {
+            underlayer_color_variant = svg::Rgba(array_color.at(0).AsInt(), array_color.at(1).AsInt(),
+                    array_color.at(2).AsInt(), array_color.at(3).AsDouble());
+        }
+    }
+    else {
+        throw std::logic_error("There is no underlayer color.");
+    }
+    
+    std::string underlayer_color = std::visit(svg::RenderColorAttribute{}, underlayer_color_variant);
+    
+    std::vector<std::string> color_palette_variant;
+    if (map_render.at("color_palette").IsArray() && !map_render.at("color_palette").AsArray().empty()) {
+        for (const auto& node : map_render.at("color_palette").AsArray()) {
+            if (node.IsString()) {
+                color_palette_variant.push_back(node.AsString());
+            }
+            else if (node.IsArray()) {
+                auto array_color = node.AsArray();
+                if (array_color.size() == 3) {
+                    color_palette_variant.push_back(
+                            std::visit(
+                                    svg::RenderColorAttribute{},
+                                    svg::Color(svg::Rgb(array_color.at(0).AsInt(), array_color.at(1).AsInt(), array_color.at(2).AsInt()))));
+                }
+                else if (array_color.size() == 4) {
+                    color_palette_variant.push_back(
+                            std::visit(
+                                    svg::RenderColorAttribute{},
+                                    svg::Color(svg::Rgba(array_color.at(0).AsInt(), array_color.at(1).AsInt(), array_color.at(2).AsInt(), array_color.at(3).AsDouble()))));
+                }
+            }
+        }
+    }
+    else {
+        throw std::logic_error("There is no color palette.");
+    }
+    
+    renderer::RenderSettings render_settings{map_render.at("width").AsDouble(), map_render.at("height").AsDouble(),
+                                             map_render.at("padding").AsDouble(),
+                                             map_render.at("line_width").AsDouble(),
+                                             map_render.at("stop_radius").AsDouble(),
+                                             map_render.at("bus_label_font_size").AsInt(),
+                                             {map_render.at("bus_label_offset").AsArray().at(0).AsDouble(),
+                                              map_render.at("bus_label_offset").AsArray().at(1).AsDouble()},
+                                             map_render.at("stop_label_font_size").AsInt(),
+                                             {map_render.at("stop_label_offset").AsArray().at(0).AsDouble(),
+                                              map_render.at("stop_label_offset").AsArray().at(1).AsDouble()},
+                                             underlayer_color, map_render.at("underlayer_width").AsDouble(),
+                                             color_palette_variant};
+    return render_settings;
 }
 }

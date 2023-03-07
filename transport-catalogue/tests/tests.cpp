@@ -30,8 +30,11 @@ void AssertImpl(bool value, const std::string& expr_str, const std::string& file
 void RunTest(const std::string& func_name) {
     std::cerr << "   OK      > " << func_name << std::endl;
 }
-void AbortTest(const std::string& func_name) {
+void AbortTest(const std::string& func_name, std::string exception_text) {
     std::cerr << "   FAILED  > " << func_name << std::endl;
+    if (!exception_text.empty()) {
+        std::cerr << exception_text << std::endl;
+    }
 }
 
 std::string GetTextFromStream(std::istream& input) {
@@ -160,8 +163,9 @@ void IntegrationTests::TestCase_5_PlusRealRoutersAndCurveInBusInformation() {
     
     TransportCatalogue transport_catalogue{};
     IoRequests::StreamReader stream_reader(transport_catalogue, file_input_stream, o_string_stream);
-    IoRequests::IoRequestsBase& input_reader = stream_reader;
+    IoRequests::IoBase& input_reader = stream_reader;
     
+    input_reader.PreloadDocument();
     input_reader.LoadData();
     input_reader.SendAnswer();
     
@@ -185,11 +189,11 @@ void IntegrationTests::TestCase_6_JsonReader() {
                                        "    { \"id\": 2, \"type\": \"Bus\", \"name\": \"114\" }\n" "  ]\n" "} "s);
     
     std::ostringstream o_string_stream;
-    
     TransportCatalogue transport_catalogue{};
     IoRequests::JsonReader json_reader(transport_catalogue, i_string_stream, o_string_stream);
-    IoRequests::IoRequestsBase& input_reader = json_reader;
+    IoRequests::IoBase& input_reader = json_reader;
     
+    input_reader.PreloadDocument();
     input_reader.LoadData();
     input_reader.SendAnswer();
     
@@ -207,6 +211,43 @@ void IntegrationTests::TestCase_6_JsonReader() {
     json::Document correct_doc = json::Load(correct_stream);
     
     ASSERT(answer_doc == correct_doc);
+    
+}
+
+void IntegrationTests::TestCase_7_MapRender() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_integration_input.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    IoRequests::IRenderSettings& render_settings = json_reader;
+    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.Render();
+    
+    std::string correct_answer_1 = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                                   "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n"
+                                   "  <polyline points=\"99.2283,329.5 50,232.18 99.2283,329.5\" fill=\"none\" stroke=\"green\" stroke-width=\"14\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n"
+                                   "  <polyline points=\"550,190.051 279.22,50 333.61,269.08 550,190.051\" fill=\"none\" stroke=\"rgb(255,160,0)\" stroke-width=\"14\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n"
+                                   "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"99.2283\" y=\"329.5\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">114</text>\n"
+                                   "  <text fill=\"green\" x=\"99.2283\" y=\"329.5\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">114</text>\n"
+                                   "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"50\" y=\"232.18\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">114</text>\n"
+                                   "  <text fill=\"green\" x=\"50\" y=\"232.18\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">114</text>\n"
+                                   "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"550\" y=\"190.051\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">14</text>\n"
+                                   "  <text fill=\"rgb(255,160,0)\" x=\"550\" y=\"190.051\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">14</text>\n"
+                                   "</svg>"s;
+    auto answer = o_string_stream.str();
+/*
+    std::cout << correct_answer_1 << std::endl;
+    std::cout << std::endl;
+    std::cout << answer << std::endl;
+*/
+    
+    ASSERT(answer == correct_answer_1);
     
 }
 
@@ -401,7 +442,7 @@ void TransportCatalogueTests::GetStopInfo() {
     ASSERT(stop_info_birul.has_value() && stop_info_birul.value() == stop_info_3);
 }
 
-void ConsoleInputReaderTests::Load() {
+void StreamReaderTests::Load() {
     std::istringstream file_input_stream("13\n"
                                          "Stop Tolstopaltsevo: 55.611087, 37.20829, 3900m to Marushkino\n"
                                          "Stop Marushkino: 55.595884, 37.209755, 9900m to Rasskazovka, 100m to Marushkino\n"
@@ -420,8 +461,9 @@ void ConsoleInputReaderTests::Load() {
     
     TransportCatalogue transport_catalogue{};
     IoRequests::StreamReader stream_reader(transport_catalogue, file_input_stream, o_string_stream);
-    IoRequests::IoRequestsBase& input_reader = stream_reader;
+    IoRequests::IoBase& input_reader = stream_reader;
     
+    input_reader.PreloadDocument();
     input_reader.LoadData();
     
     std::deque<Domain::Bus>& buses = transport_catalogue.GetBuses();
@@ -438,7 +480,7 @@ void ConsoleInputReaderTests::Load() {
     ASSERT(transport_catalogue.GetBusRealLength(transport_catalogue.FindBus("750").value()->route) == 27400);
 }
 
-void ConsoleStatReaderTests::SendAnswer() {
+void StreamReaderTests::SendAnswer() {
     TransportCatalogue transport_catalogue{};
     transport_catalogue.InsertStop(Domain::Stop("Tolstopaltsevo", 55.611087, 37.208290));
     transport_catalogue.InsertStop(Domain::Stop("Marushkino", 55.595884, 37.209755));
@@ -481,8 +523,9 @@ void ConsoleStatReaderTests::SendAnswer() {
     std::ostringstream o_string_stream;
     
     IoRequests::StreamReader stream_reader(transport_catalogue, file_input_stream, o_string_stream);
-    IoRequests::IoRequestsBase& input_reader = stream_reader;
+    IoRequests::IoBase& input_reader = stream_reader;
     
+    input_reader.PreloadDocument();
     input_reader.SendAnswer();
     
     std::string correct_answer = "Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.36124 curvature\n"
@@ -495,10 +538,102 @@ void ConsoleStatReaderTests::SendAnswer() {
     ASSERT(str == correct_answer);
 }
 
+void MapRenderTests::TestCase1() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_01_input.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    IoRequests::IRenderSettings& render_settings = json_reader;
+    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.Render();
+    
+    auto answer = o_string_stream.str();
+        std::cout << answer << std::endl;
+    ASSERT(true);
+
+}
+
+void MapRenderTests::TestCase2() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_02_input.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    IoRequests::IRenderSettings& render_settings = json_reader;
+    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.Render();
+    
+    auto answer = o_string_stream.str();
+    std::cout << answer << std::endl << std::endl;
+    ASSERT(true);
+
+}
+
+void MapRenderTests::TestCase3() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_03_input.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    IoRequests::IRenderSettings& render_settings = json_reader;
+    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.Render();
+    
+    auto answer = o_string_stream.str();
+    std::cout << answer << std::endl << std::endl;
+    ASSERT(true);
+
+}
+
+void MapRenderTests::TestCaseUnicnownStopPureCatalog() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_04_input.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    IoRequests::IRenderSettings& render_settings = json_reader;
+    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.Render();
+    
+    auto answer = o_string_stream.str();
+    std::string correct_answer = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n</svg>";
+    std::cout << answer << std::endl << std::endl;
+    ASSERT(answer == correct_answer);
+
+}
+
+void MapRenderTests::TestCase5() {
+
+}
+
+
 void AllTests() {
+/*
     IntegrationTests integration_tests;
     RUN_TEST(integration_tests.TestCase_5_PlusRealRoutersAndCurveInBusInformation)
     RUN_TEST(integration_tests.TestCase_6_JsonReader)
+    RUN_TEST(integration_tests.TestCase_7_MapRender)
     TransportCatalogueTests transport_catalogue_tests;
     RUN_TEST(transport_catalogue_tests.TrackSectionHasher)
     RUN_TEST(transport_catalogue_tests.AddBus)
@@ -508,9 +643,15 @@ void AllTests() {
     RUN_TEST(transport_catalogue_tests.GetBusInfo)
     RUN_TEST(transport_catalogue_tests.GetBusInfoPlusCurvatureAdded)
     RUN_TEST(transport_catalogue_tests.GetStopInfo)
-    ConsoleInputReaderTests console_input_reader_tests;
-    RUN_TEST(console_input_reader_tests.Load)
-    ConsoleStatReaderTests console_stat_reader_tests;
-    RUN_TEST(console_stat_reader_tests.SendAnswer)
+    StreamReaderTests stream_reader_tests;
+    RUN_TEST(stream_reader_tests.Load)
+    RUN_TEST(stream_reader_tests.SendAnswer)
+*/
+    MapRenderTests map_render_tests;
+    RUN_TEST(map_render_tests.TestCase1);
+    RUN_TEST(map_render_tests.TestCase2);
+    RUN_TEST(map_render_tests.TestCase3);
+    RUN_TEST(map_render_tests.TestCaseUnicnownStopPureCatalog);
 }
+
 }

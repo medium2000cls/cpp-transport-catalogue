@@ -8,7 +8,7 @@
 
 namespace TransportGuide::Domain {
 
-//region detail
+//region geo
 
 constexpr double ACCURACY_COMPARISON = 1e-1;
 

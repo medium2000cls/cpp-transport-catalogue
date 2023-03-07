@@ -3,15 +3,15 @@
 //Вынес радиус земли в константу
 static const int AVERAGE_RADIUS_EARTH = 6371000;
 
-bool TransportGuide::detail::Coordinates::operator==(const Coordinates& other) const {
+bool TransportGuide::Domain::geo::Coordinates::operator==(const Coordinates& other) const {
     return lat == other.lat && lng == other.lng;
 }
 
-bool TransportGuide::detail::Coordinates::operator!=(const Coordinates& other) const {
+bool TransportGuide::Domain::geo::Coordinates::operator!=(const Coordinates& other) const {
     return !(*this == other);
 }
 
-double TransportGuide::detail::ComputeDistance(Coordinates from, Coordinates to) {
+double TransportGuide::Domain::geo::ComputeDistance(Coordinates from, Coordinates to) {
     using namespace std;
     if (from == to) {
         return 0;

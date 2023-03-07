@@ -119,12 +119,15 @@ void AssertImpl(bool value, const std::string& expr_str, const std::string& file
 #define ASSERT_HINT(expr, hint) AssertImpl(!!(expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
 
 void RunTest(const std::string& func_name);
-void AbortTest(const std::string& func_name);
+void AbortTest(const std::string& func_name, std::string exception_text = "");
 
 #define RUN_TEST(func) {             \
     try {                            \
         func();                      \
         RunTest(#func);              \
+    }                                \
+    catch (const std::exception& e) {\
+    AbortTest(#func, e.what());      \
     }                                \
     catch (...){ AbortTest(#func); } \
 }
@@ -144,6 +147,7 @@ class IntegrationTests {
 public:
     void TestCase_5_PlusRealRoutersAndCurveInBusInformation();
     void TestCase_6_JsonReader();
+    void TestCase_7_MapRender();
 };
 
 
@@ -160,15 +164,41 @@ public:
 };
 
 
-class ConsoleInputReaderTests {
+class StreamReaderTests {
 public:
     void Load();
+    void SendAnswer();
 };
 
-
-class ConsoleStatReaderTests {
+class MapRenderTests {
 public:
-    void SendAnswer();
+/**
+    Тест № 20 НЕ прошел проверку
+    подсказка: Неправильно обработан случайный ввод (автобусы=3, остановки=2, маршрут=4, запросов=10)
+*/
+    void TestCase1();
+/*
+    Тест № 21 НЕ прошел проверку
+    подсказка: Неправильно обработан случайный ввод (автобусы=2, остановки=max, маршрут=10, запросов=10)
+*/
+    void TestCase2();
+/*
+    Тест № 22 НЕ прошел проверку
+    подсказка: Неправильно обработан случайный ввод (автобусы=10, остановки=max, маршрут=max, запросов=10)
+*/
+    void TestCase3();
+/*
+    Тест № 23 НЕ прошел проверку
+    подсказка: Неправильно обработан случайный ввод (автобусы=max, остановки=max, маршрут=max, запросов=100)
+*/
+    void TestCaseUnicnownStopPureCatalog();
+/*
+
+    Тест № 24 НЕ прошел проверку
+    подсказка: Неправильно обработан случайный ввод (автобусы=max, остановки=max, маршрут=max, запросов=max)
+*/
+    void TestCase5();
+    
 };
 
 void AllTests();

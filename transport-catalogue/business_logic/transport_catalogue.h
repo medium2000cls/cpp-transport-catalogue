@@ -12,22 +12,39 @@
 
 namespace TransportGuide::BusinessLogic {
 
+//todo Переписать все указатели на std::unique<!*!*!>
 class TransportCatalogue {
 public:
     TransportCatalogue() = default;
+    /**Вставить маршрут, если маршрут с таким именем есть, то обновить данные*/
     Domain::Bus* InsertBus(const Domain::Bus& bus);
+    /**Вставить остановку, если остановка с таким именем есть, то обновить данные*/
     Domain::Stop* InsertStop(const Domain::Stop& stop);
+    /**Найти маршрут по имени, если маршрута нет, возвращается nullopt*/
     std::optional<const Domain::Bus*> FindBus(const std::string_view& name) const;
+    /**Найти остановку по имени, если остановки нет, возвращается nullopt*/
     std::optional<const Domain::Stop*> FindStop(const std::string_view& name) const;
+    /**Получить информацию о маршруте, по указателю на маршрут*/
     std::optional<Domain::BusInfo> GetBusInfo(const Domain::Bus* bus) const;
+    /**Получить информацию о маршруте, по имени маршрута*/
     std::optional<Domain::BusInfo> GetBusInfo(const std::string_view& bus_name) const;
+    /**Получить информацию об остановке, по указателю на остановку*/
     std::optional<Domain::StopInfo> GetStopInfo(const Domain::Stop* stop) const;
+    /**Получить информацию об остановке, по имени остановки*/
     std::optional<Domain::StopInfo> GetStopInfo(const std::string_view& stop_name) const;
+    /**Добавить в каталог реальное расстояние между остановками*/
     void AddRealDistanceToCatalog(Domain::TrackSection track_section, double distance);
+    /**Добавить в каталог реальное расстояние между остановками*/
     void AddRealDistanceToCatalog(const Domain::Stop* left, const Domain::Stop* right, double distance);
+    /**Получить посчитанное расстояние между списком остановок*/
     double GetBusCalculateLength(const std::vector<const Domain::Stop*>& route) const;
+    /**Получить реальное расстояние между списком остановок, если реального расстояния нет, вместо него используется посчитанное*/
     double GetBusRealLength(const std::vector<const Domain::Stop*>& route) const;
-    
+    /**Получить словарь маршрутов, с ключом по имени*/
+    const std::unordered_map<std::string_view, Domain::Bus*>& GetBusNameCatalog() const;
+    /**Получить словарь остановок, с ключом по имени*/
+    const std::unordered_map<std::string_view, Domain::Stop*>& GetStopNameCatalog() const;
+
 protected:
     std::deque<Domain::Bus> bus_catalog_;
     std::deque<Domain::Stop> stop_catalog_;

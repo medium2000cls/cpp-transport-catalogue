@@ -177,8 +177,8 @@ double TransportCatalogue::GetCalculatedDistance(const Domain::Stop* left,
 
 //Считаю и добавляю дистанцию в каталог
 void TransportCatalogue::AddCalculatedDistanceToCatalog(Domain::TrackSection track_section) const {
-    double distance = detail::ComputeDistance({track_section.first->latitude, track_section.first->longitude},
-            {track_section.second->latitude, track_section.second->longitude});
+    double distance = Domain::geo::ComputeDistance({track_section.first->latitude, track_section.first->longitude},
+                                           {track_section.second->latitude, track_section.second->longitude});
     calculated_distance_catalog_[track_section] = distance;
     std::swap(track_section.first, track_section.second);
     calculated_distance_catalog_[track_section] = distance;
@@ -224,6 +224,14 @@ std::vector<const Domain::Bus*> TransportCatalogue::GetBusesByStop(
             [](const Domain::Bus* lhs, const Domain::Bus* rhs) {
                 return lhs->name < rhs->name;
             });
+}
+
+const std::unordered_map<std::string_view, Domain::Bus*>& TransportCatalogue::GetBusNameCatalog() const {
+    return bus_name_catalog_;
+}
+
+const std::unordered_map<std::string_view, Domain::Stop*>& TransportCatalogue::GetStopNameCatalog() const {
+    return stop_name_catalog_;
 }
 
 //endregion

@@ -1,0 +1,57 @@
+{
+  "render_settings": {
+    "width": 20813.932740104196,
+    "height": 21236.96194606178,
+    "padding": 246.38412540788627,
+    "stop_radius": 18070.059618554013,
+    "line_width": 24786.51995436037,
+    "stop_label_font_size": 55660,
+    "stop_label_offset": [61510.59940519501, -49318.030578275175],
+    "underlayer_color": "tan",
+    "underlayer_width": 3750.898980270579,
+    "color_palette": [
+      [248, 156, 76]
+    ],
+    "bus_label_font_size": 78861,
+    "bus_label_offset": [93032.8057343805, -58027.61093406084]
+  },
+  "base_requests": [{
+    "type": "Stop",
+    "name": "Stop A1",
+    "latitude": 55.611087,
+    "longitude": 37.20829,
+    "road_distances": {
+      "Stop A2": 1000,
+      "Stop A3": 1000
+    }
+  }, {
+    "type": "Stop",
+    "name": "Stop A2",
+    "latitude": 55.595884,
+    "longitude": 37.209755,
+    "road_distances": {
+      "Stop A3": 1000
+    }
+  }, {
+    "type": "Stop",
+    "name": "Stop A3",
+    "latitude": 55.632761,
+    "longitude": 37.333324,
+    "road_distances": {}
+  }, {
+    "type": "Bus",
+    "name": "B1",
+    "stops": ["Stop A1", "Stop A2"],
+    "is_roundtrip": false
+  }, {
+    "type": "Bus",
+    "name": "B2",
+    "stops": ["Stop A2", "Stop A3"],
+    "is_roundtrip": false
+  }],
+  "stat_requests": [{
+    "id": 2010418758,
+    "type": "Stop",
+    "name": "Stop A1"
+  }]
+}
