@@ -8,15 +8,27 @@ set(CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -static")
 #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/transport-catalogue/test_case
+file(COPY transport-catalogue/tests/test_case
         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
 
 add_executable(cpp-transport-catalogue
-        transport-catalogue/geo.h
-        transport-catalogue/input_reader.cpp
-        transport-catalogue/input_reader.h
         transport-catalogue/main.cpp
-        transport-catalogue/stat_reader.cpp
-        transport-catalogue/stat_reader.h
-        transport-catalogue/transport_catalogue.cpp
-        transport-catalogue/transport_catalogue.h transport-catalogue/tests.h transport-catalogue/tests.cpp)
+        transport-catalogue/infrastructure/stream_reader.h
+        transport-catalogue/infrastructure/stream_reader.cpp
+        transport-catalogue/domain/domain.h
+        transport-catalogue/domain/domain.cpp
+        transport-catalogue/domain/geo.h
+        transport-catalogue/external/json.h
+        transport-catalogue/external/json.cpp
+        transport-catalogue/infrastructure/json_reader.h
+        transport-catalogue/infrastructure/json_reader.cpp
+        transport-catalogue/infrastructure/map_renderer.h
+        transport-catalogue/infrastructure/map_renderer.cpp
+        transport-catalogue/infrastructure/request_handler.h
+        transport-catalogue/infrastructure/request_handler.cpp
+        transport-catalogue/external/svg.h
+        transport-catalogue/external/svg.cpp
+        transport-catalogue/business_logic/transport_catalogue.cpp
+        transport-catalogue/business_logic/transport_catalogue.h
+        transport-catalogue/tests/tests.h
+        transport-catalogue/tests/tests.cpp transport-catalogue/infrastructure/io_requests_base.h transport-catalogue/infrastructure/io_requests_base.cpp transport-catalogue/domain/geo.cpp)

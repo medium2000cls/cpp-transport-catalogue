@@ -1,23 +1,19 @@
-#include "geo.h"
-#include "input_reader.h"
-#include "stat_reader.h"
-#include "transport_catalogue.h"
-#include "tests.h"
+#include "domain/geo.h"
+#include "infrastructure/stream_reader.h"
+#include "business_logic/transport_catalogue.h"
+#include "tests/tests.h"
+#include "infrastructure/json_reader.h"
 
 
 int main() {
-    TransportGuide::Test::AllTests();
-/*
-    TransportGuide::Core::TransportCatalogue transport_catalogue{};
-    TransportGuide::IoRequests::StreamInputReader stream_input_reader(transport_catalogue, std::cin);
-    TransportGuide::IoRequests::BaseInputReader& input_reader = stream_input_reader;
+//    TransportGuide::Test::AllTests();
     
-    TransportGuide::IoRequests::StreamStatReader stream_stat_reader (transport_catalogue, std::cin, std::cout);
-    TransportGuide::IoRequests::BaseStatReader& stat_reader = stream_stat_reader;
-    
-    input_reader.Load();
-    stat_reader.SendAnswer();
-*/
+    TransportGuide::BusinessLogic::TransportCatalogue transport_catalogue{};
+    TransportGuide::IoRequests::JsonReader json_reader(transport_catalogue, std::cin, std::cout);
+    TransportGuide::IoRequests::IoRequestsBase& io_requests_base = json_reader;
+
+    io_requests_base.LoadData();
+    io_requests_base.SendAnswer();
     
     return 0;
 }

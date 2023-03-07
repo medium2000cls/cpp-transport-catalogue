@@ -6,7 +6,8 @@
 #include <iostream>
 #include <chrono>
 
-#include "transport_catalogue.h"
+#include "../business_logic/transport_catalogue.h"
+#include "../domain/domain.h"
 
 
 namespace TransportGuide::Test {
@@ -130,18 +131,19 @@ void AbortTest(const std::string& func_name);
 
 //endregion
 
-class TransportCatalogue final : public TransportGuide::Core::TransportCatalogue {
+class TransportCatalogue final : public TransportGuide::BusinessLogic::TransportCatalogue {
 public:
-    void AddRealDistanceToCatalog(Core::TrackSection track_section, double distance);
-    double GetBusRealLength(const std::vector<const Core::Stop*>& route);
-    std::deque<Core::Stop>& GetStops();
-    std::deque<Core::Bus>& GetBuses();
+    void AddRealDistanceToCatalog(Domain::TrackSection track_section, double distance);
+    double GetBusRealLength(const std::vector<const Domain::Stop*>& route);
+    std::deque<Domain::Stop>& GetStops();
+    std::deque<Domain::Bus>& GetBuses();
 };
 
 
 class IntegrationTests {
 public:
     void TestCase_5_PlusRealRoutersAndCurveInBusInformation();
+    void TestCase_6_JsonReader();
 };
 
 
