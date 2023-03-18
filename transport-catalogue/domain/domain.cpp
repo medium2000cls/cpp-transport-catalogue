@@ -82,12 +82,19 @@ Bus::Bus(std::string name, const std::vector<const Stop*>& route, double calc_le
     unique_stops_count = unique_stops.size();
 }
 
+Bus::Bus(std::string name, const std::vector<const Stop*>& route, size_t number_final_stop, double calc_length,
+        double real_length) : Bus(std::move(name), route, calc_length, real_length) {
+    number_final_stop_ = number_final_stop;
+}
+
 Bus::Bus(const Bus& other) {
     name = other.name;
     route = other.route;
     unique_stops_count = other.unique_stops_count;
     calc_length = other.calc_length;
     real_length = other.real_length;
+    number_final_stop_ = other.number_final_stop_;
+    
 }
 
 Bus& Bus::operator=(const Bus& other) {
@@ -98,6 +105,7 @@ Bus& Bus::operator=(const Bus& other) {
         std::swap(unique_stops_count, bus.unique_stops_count);
         std::swap(calc_length, bus.calc_length);
         std::swap(real_length, bus.real_length);
+        std::swap(number_final_stop_, bus.number_final_stop_);
     }
     return *this;
 }
@@ -108,10 +116,25 @@ bool Bus::Update(const Bus& other) {
         unique_stops_count = other.unique_stops_count;
         calc_length = other.calc_length;
         real_length = other.real_length;
+        number_final_stop_ = other.number_final_stop_;
         return true;
     }
     return false;
     
+}
+
+bool Bus::IsRoundtrip() const {
+    return number_final_stop_ == 0;
+}
+
+std::vector<const Stop*> Bus::GetForwardRoute() const {
+    if (!route.empty() && IsRoundtrip()) {
+        return {route.begin(), std::prev(route.end(), 1)};
+    }
+    else if (!route.empty()) {
+        return {route.begin(), std::next(route.begin(), number_final_stop_)};
+    }
+    return {};
 }
 
 //endregion

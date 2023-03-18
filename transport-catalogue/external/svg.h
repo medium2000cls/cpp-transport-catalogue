@@ -188,7 +188,7 @@ struct RenderContext {
  * конкретных тегов SVG-документа
  * Реализует паттерн "Шаблонный метод" для вывода содержимого тега
  */
-class Object {
+class   Object {
 public:
     void Render(const RenderContext& context) const;
     

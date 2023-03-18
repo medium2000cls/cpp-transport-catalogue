@@ -1,11 +1,4 @@
 #pragma once
-
-/*
- * В этом файле вы можете разместить код, отвечающий за визуализацию карты маршрутов в формате SVG.
- * Визуализация маршрутов вам понадобится во второй части итогового проекта.
- * Пока можете оставить файл пустым.
- */
-
 #include "../domain/geo.h"
 #include "../external/svg.h"
 #include "../business_logic/transport_catalogue.h"
@@ -15,6 +8,7 @@
 #include <iostream>
 #include <optional>
 #include <vector>
+#include <set>
 
 namespace TransportGuide::renderer {
 
@@ -118,8 +112,14 @@ private:
     const BusinessLogic::TransportCatalogue& catalogue_;
     std::ostream& out;
     svg::Document document_;
-    std::unique_ptr<svg::Object> CreateRoute(const Domain::Bus* bus_ptr, const RenderSettings& settings, const SphereProjector& sphere_projector,
-            const svg::Color& color_route) const;
+    void CreatePolyline(svg::Document& document, const RenderSettings& settings, const std::set<std::string_view>& buses,
+            const SphereProjector& sphere_projector);
+    void CreateNameRoute(svg::Document& document, const RenderSettings& settings,
+            const std::set<std::string_view>& buses, const SphereProjector& sphere_projector);
+    void CreateCircle(svg::Document& document, const RenderSettings& settings,
+            const std::vector<Domain::geo::Coordinates>& stop_coordinates, const SphereProjector& sphere_projector);
+    void CreateNameStop(svg::Document& document, const RenderSettings& settings,
+            const std::set<std::string_view>& stops, const SphereProjector& sphere_projector);
 };
 
 template<typename Container>

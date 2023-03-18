@@ -102,8 +102,9 @@ void JsonReader::AddBusByNode(const json::Node* node_ptr) {
         Domain::Stop* stop_ptr = catalogue_.InsertStop(Domain::Stop(stop_name));
         route.push_back(stop_ptr);
     }
-    
+    size_t number_final_stop = 0;
     if (!node_dict.at("is_roundtrip"s).AsBool()) {
+        number_final_stop = route.size();
         std::vector<const Domain::Stop*> backward_route;
         std::copy(std::next(route.rbegin()), route.rend(),
                 std::back_insert_iterator<std::vector<const Domain::Stop*>>(backward_route));
@@ -113,7 +114,7 @@ void JsonReader::AddBusByNode(const json::Node* node_ptr) {
     
     double calc_dist = catalogue_.GetBusCalculateLength(route);
     double real_dist = catalogue_.GetBusRealLength(route);
-    catalogue_.InsertBus(Domain::Bus(bus_name, route, calc_dist, real_dist));
+    catalogue_.InsertBus(Domain::Bus(bus_name, route, number_final_stop, calc_dist, real_dist));
 }
 
 void JsonReader::SendAnswer() {

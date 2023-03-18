@@ -35,12 +35,19 @@ struct Bus {
     double calc_length;
     double real_length;
     explicit Bus(std::string name, const std::vector<const Stop*>& route, double calc_length, double real_length);
+    explicit Bus(std::string name, const std::vector<const Stop*>& route, size_t number_final_stop, double calc_length, double real_length);
     ~Bus() = default;
     Bus(const Bus& other);
     Bus& operator=(const Bus& other);
     bool Update(const Bus& other);
+    bool IsRoundtrip() const;
+    std::vector<const Stop*> GetForwardRoute() const;
     bool operator==(const Bus& rhs) const;
     bool operator!=(const Bus& rhs) const;
+    
+private:
+    size_t number_final_stop_ = 0;
+    
 };
 
 

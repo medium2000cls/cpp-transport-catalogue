@@ -239,6 +239,21 @@ void IntegrationTests::TestCase_7_MapRender() {
                                    "  <text fill=\"green\" x=\"50\" y=\"232.18\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">114</text>\n"
                                    "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"550\" y=\"190.051\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">14</text>\n"
                                    "  <text fill=\"rgb(255,160,0)\" x=\"550\" y=\"190.051\" dx=\"7\" dy=\"15\" font-size=\"20\" font-family=\"Verdana\" font-weight=\"bold\">14</text>\n"
+                                   "  <circle cx=\"279.22\" cy=\"50\" r=\"5\" fill=\"white\"/>\n"
+                                   "  <circle cx=\"99.2283\" cy=\"329.5\" r=\"5\" fill=\"white\"/>\n"
+                                   "  <circle cx=\"50\" cy=\"232.18\" r=\"5\" fill=\"white\"/>\n"
+                                   "  <circle cx=\"333.61\" cy=\"269.08\" r=\"5\" fill=\"white\"/>\n"
+                                   "  <circle cx=\"550\" cy=\"190.051\" r=\"5\" fill=\"white\"/>\n"
+                                   "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"279.22\" y=\"50\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Elektroseti</text>\n"
+                                   "  <text fill=\"black\" x=\"279.22\" y=\"50\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Elektroseti</text>\n"
+                                   "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"99.2283\" y=\"329.5\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Morskoy vokzal</text>\n"
+                                   "  <text fill=\"black\" x=\"99.2283\" y=\"329.5\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Morskoy vokzal</text>\n"
+                                   "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"50\" y=\"232.18\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Rivierskiy most</text>\n"
+                                   "  <text fill=\"black\" x=\"50\" y=\"232.18\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Rivierskiy most</text>\n"
+                                   "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"333.61\" y=\"269.08\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Ulitsa Dokuchaeva</text>\n"
+                                   "  <text fill=\"black\" x=\"333.61\" y=\"269.08\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Ulitsa Dokuchaeva</text>\n"
+                                   "  <text fill=\"rgba(255,255,255,0.85)\" stroke=\"rgba(255,255,255,0.85)\" stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\" x=\"550\" y=\"190.051\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Ulitsa Lizy Chaikinoi</text>\n"
+                                   "  <text fill=\"black\" x=\"550\" y=\"190.051\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Ulitsa Lizy Chaikinoi</text>\n"
                                    "</svg>"s;
     auto answer = o_string_stream.str();
 /*
@@ -554,7 +569,9 @@ void MapRenderTests::TestCase1() {
     map_renderer.Render();
     
     auto answer = o_string_stream.str();
+/*
         std::cout << answer << std::endl;
+*/
     ASSERT(true);
 
 }
@@ -575,7 +592,9 @@ void MapRenderTests::TestCase2() {
     map_renderer.Render();
     
     auto answer = o_string_stream.str();
+/*
     std::cout << answer << std::endl << std::endl;
+*/
     ASSERT(true);
 
 }
@@ -596,7 +615,9 @@ void MapRenderTests::TestCase3() {
     map_renderer.Render();
     
     auto answer = o_string_stream.str();
+/*
     std::cout << answer << std::endl << std::endl;
+*/
     ASSERT(true);
 
 }
@@ -618,18 +639,42 @@ void MapRenderTests::TestCaseUnicnownStopPureCatalog() {
     
     auto answer = o_string_stream.str();
     std::string correct_answer = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n</svg>";
+/*
     std::cout << answer << std::endl << std::endl;
+*/
     ASSERT(answer == correct_answer);
 
 }
 
-void MapRenderTests::TestCase5() {
-
+void MapRenderTests::TestCaseBigData() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_big_data_input.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/maprender_case_big_data_output.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    IoRequests::IRenderSettings& render_settings = json_reader;
+    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.Render();
+    
+    auto answer = o_string_stream.str() + "\n";
+    std::string correct_answer = GetTextFromStream(file_output_stream);
+    
+/*
+    std::cout << correct_answer << std::endl << std::endl;
+    std::cout << answer << std::endl << std::endl;
+*/
+    
+    ASSERT(answer == correct_answer);
 }
 
 
 void AllTests() {
-/*
     IntegrationTests integration_tests;
     RUN_TEST(integration_tests.TestCase_5_PlusRealRoutersAndCurveInBusInformation)
     RUN_TEST(integration_tests.TestCase_6_JsonReader)
@@ -646,12 +691,12 @@ void AllTests() {
     StreamReaderTests stream_reader_tests;
     RUN_TEST(stream_reader_tests.Load)
     RUN_TEST(stream_reader_tests.SendAnswer)
-*/
     MapRenderTests map_render_tests;
     RUN_TEST(map_render_tests.TestCase1);
     RUN_TEST(map_render_tests.TestCase2);
     RUN_TEST(map_render_tests.TestCase3);
     RUN_TEST(map_render_tests.TestCaseUnicnownStopPureCatalog);
+    RUN_TEST(map_render_tests.TestCaseBigData);
 }
 
 }

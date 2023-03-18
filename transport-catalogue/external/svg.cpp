@@ -171,6 +171,7 @@ void Text::RenderObject(const RenderContext& context) const {
 
 //region --------- Document ---------
 
+//Передача по rvalue ссылке защищает от срезки
 void Document::AddPtr(std::unique_ptr<Object>&& obj) {
     objects_.push_back(std::move(obj));
 }

@@ -95,12 +95,14 @@ void StreamReader::AddBusByDescription(std::string_view str_view) {
             route.push_back(stop_ptr);
         }
     };
+    size_t number_final_stop = 0;
     if (str_view.find('>') != std::string::npos) {
         fill_route(">\n");
     }
     else {
         fill_route("-\n");
         std::vector<const Domain::Stop*> backward_route;
+        number_final_stop = route.size();
         std::copy(std::next(route.rbegin()), route.rend(),
                 std::back_insert_iterator<std::vector<const Domain::Stop*>>(backward_route));
         std::move(backward_route.begin(), backward_route.end(),
@@ -108,7 +110,7 @@ void StreamReader::AddBusByDescription(std::string_view str_view) {
     }
     double calc_dist = catalogue_.GetBusCalculateLength(route);
     double real_dist = catalogue_.GetBusRealLength(route);
-    catalogue_.InsertBus(Domain::Bus(bus_name, route, calc_dist, real_dist));
+    catalogue_.InsertBus(Domain::Bus(bus_name, route, number_final_stop, calc_dist, real_dist));
 }
 
 std::ostream& operator<< (std::ostream& o_stream, const Domain::BusInfo& bus_info) {
