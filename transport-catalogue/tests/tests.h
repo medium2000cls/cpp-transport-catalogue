@@ -177,7 +177,9 @@ public:
     void TestCase3();
     void TestCaseUnicnownStopPureCatalog();
     void TestCaseBigData();
-   
+    void TestCase4();
+    void TestCase5();
+    void TestCase6();
 };
 
 void AllTests();

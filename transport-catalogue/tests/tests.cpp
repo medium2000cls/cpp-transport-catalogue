@@ -12,8 +12,8 @@ using namespace std::literals;
 constexpr double ACCURACY_COMPARISON = 1e-6;
 
 //region assist definition
-void AssertImpl(bool value, const std::string& expr_str, const std::string& file, const std::string& func,
-        unsigned int line, const std::string& hint) {
+void AssertImpl(bool value, [[maybe_unused]]const std::string& expr_str, [[maybe_unused]]const std::string& file, [[maybe_unused]]const std::string& func,
+        [[maybe_unused]]unsigned int line, const std::string& hint) {
     using namespace std;
     
     if (!value) {
@@ -190,7 +190,8 @@ void IntegrationTests::TestCase_6_JsonReader() {
     
     std::ostringstream o_string_stream;
     TransportCatalogue transport_catalogue{};
-    IoRequests::JsonReader json_reader(transport_catalogue, i_string_stream, o_string_stream);
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, i_string_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
     
     input_reader.PreloadDocument();
@@ -219,15 +220,15 @@ void IntegrationTests::TestCase_7_MapRender() {
     std::ostringstream o_string_stream;
     
     TransportCatalogue transport_catalogue{};
-    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::IRenderSettings& render_settings = json_reader;
-    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
     map_renderer.CreateDocument(render_settings.GetRenderSettings());
-    map_renderer.Render();
+    map_renderer.Render(o_string_stream);
     
     std::string correct_answer_1 = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
                                    "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n"
@@ -514,7 +515,7 @@ void StreamReaderTests::SendAnswer() {
             Domain::Bus("750", {&stops[0], &stops[1], &stops[1], &stops[2], &stops[1], &stops[1], &stops[0]}, 20939.5,
                     27400));
     transport_catalogue.InsertBus(Domain::Bus("828", {&stops[3], &stops[5], &stops[8], &stops[3]}, 14431.0, 15500.0));
-    auto& buses = transport_catalogue.GetBuses();
+    
     transport_catalogue.AddRealDistanceToCatalog({&stops[0], &stops[1]}, 3900);
     transport_catalogue.AddRealDistanceToCatalog({&stops[1], &stops[2]}, 9900);
     transport_catalogue.AddRealDistanceToCatalog({&stops[1], &stops[1]}, 100);
@@ -558,20 +559,20 @@ void MapRenderTests::TestCase1() {
     std::ostringstream o_string_stream;
     
     TransportCatalogue transport_catalogue{};
-    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::IRenderSettings& render_settings = json_reader;
-    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
     map_renderer.CreateDocument(render_settings.GetRenderSettings());
-    map_renderer.Render();
+    map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str();
-/*
-        std::cout << answer << std::endl;
-*/
+    /*
+            std::cout << answer << std::endl;
+    */
     ASSERT(true);
 
 }
@@ -581,20 +582,20 @@ void MapRenderTests::TestCase2() {
     std::ostringstream o_string_stream;
     
     TransportCatalogue transport_catalogue{};
-    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::IRenderSettings& render_settings = json_reader;
-    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
     map_renderer.CreateDocument(render_settings.GetRenderSettings());
-    map_renderer.Render();
+    map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str();
-/*
-    std::cout << answer << std::endl << std::endl;
-*/
+    /*
+        std::cout << answer << std::endl << std::endl;
+    */
     ASSERT(true);
 
 }
@@ -604,20 +605,20 @@ void MapRenderTests::TestCase3() {
     std::ostringstream o_string_stream;
     
     TransportCatalogue transport_catalogue{};
-    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::IRenderSettings& render_settings = json_reader;
-    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
     map_renderer.CreateDocument(render_settings.GetRenderSettings());
-    map_renderer.Render();
+    map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str();
-/*
-    std::cout << answer << std::endl << std::endl;
-*/
+    /*
+        std::cout << answer << std::endl << std::endl;
+    */
     ASSERT(true);
 
 }
@@ -627,15 +628,15 @@ void MapRenderTests::TestCaseUnicnownStopPureCatalog() {
     std::ostringstream o_string_stream;
     
     TransportCatalogue transport_catalogue{};
-    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::IRenderSettings& render_settings = json_reader;
-    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
     map_renderer.CreateDocument(render_settings.GetRenderSettings());
-    map_renderer.Render();
+    map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str();
     std::string correct_answer = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\">\n</svg>";
@@ -652,24 +653,95 @@ void MapRenderTests::TestCaseBigData() {
     std::ostringstream o_string_stream;
     
     TransportCatalogue transport_catalogue{};
-    IoRequests::JsonReader json_reader(transport_catalogue, file_input_stream, o_string_stream);
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::IRenderSettings& render_settings = json_reader;
-    renderer::MapRenderer map_renderer(transport_catalogue, o_string_stream);
+    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
     map_renderer.CreateDocument(render_settings.GetRenderSettings());
-    map_renderer.Render();
+    map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str() + "\n";
+    std::string correct_answer = GetTextFromStream(file_output_stream);
+    
+    /*
+        std::cout << correct_answer << std::endl << std::endl;
+        std::cout << answer << std::endl << std::endl;
+    */
+    ASSERT(answer == correct_answer);
+}
+
+void MapRenderTests::TestCase4() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_final_opentest_1.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/maprender_case_final_opentest_1_answer.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    auto answer = o_string_stream.str();
     std::string correct_answer = GetTextFromStream(file_output_stream);
     
 /*
     std::cout << correct_answer << std::endl << std::endl;
     std::cout << answer << std::endl << std::endl;
 */
+    ASSERT(answer == correct_answer);
+}
+
+void MapRenderTests::TestCase5() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_final_opentest_2.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/maprender_case_final_opentest_2_answer.json");
+    std::ostringstream o_string_stream;
     
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    auto answer = o_string_stream.str();
+    std::string correct_answer = GetTextFromStream(file_output_stream);
+    
+    /*
+        std::cout << correct_answer << std::endl << std::endl;
+        std::cout << answer << std::endl << std::endl;
+    */
+    ASSERT(answer == correct_answer);
+}
+
+void MapRenderTests::TestCase6() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_final_opentest_3.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/maprender_case_final_opentest_3_answer.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    auto answer = o_string_stream.str();
+    std::string correct_answer = GetTextFromStream(file_output_stream);
+    
+    /*
+        std::cout << correct_answer << std::endl << std::endl;
+        std::cout << answer << std::endl << std::endl;
+    */
     ASSERT(answer == correct_answer);
 }
 
@@ -697,6 +769,10 @@ void AllTests() {
     RUN_TEST(map_render_tests.TestCase3);
     RUN_TEST(map_render_tests.TestCaseUnicnownStopPureCatalog);
     RUN_TEST(map_render_tests.TestCaseBigData);
+    RUN_TEST(map_render_tests.TestCase4);
+    RUN_TEST(map_render_tests.TestCase5);
+    RUN_TEST(map_render_tests.TestCase6);
+    
 }
 
 }

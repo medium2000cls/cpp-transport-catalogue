@@ -17,10 +17,14 @@ protected:
     BusinessLogic::TransportCatalogue& catalogue_;
 };
 
-struct IRenderSettings {
+struct RenderBase {
 public:
     virtual renderer::RenderSettings GetRenderSettings() = 0;
-    virtual ~IRenderSettings() = default;
+protected:
+    std::string Render();
+    explicit RenderBase(renderer::MapRenderer& map_renderer);
+    virtual ~RenderBase() = default;
+    renderer::MapRenderer& map_renderer_;
 };
 
 }

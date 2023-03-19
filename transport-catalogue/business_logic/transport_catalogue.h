@@ -73,7 +73,7 @@ private:
         std::vector<const Domain::Bus*> buses;
         if (stop_buses_catalog_.count(stop)) {
             const auto& buses_catalog = stop_buses_catalog_.at(stop);
-            buses = std::move(std::vector<const Domain::Bus*>(buses_catalog.begin(), buses_catalog.end()));
+            buses = std::vector<const Domain::Bus*>(buses_catalog.begin(), buses_catalog.end());
             std::sort(buses.begin(), buses.end(), comparator);
         }
         return buses;

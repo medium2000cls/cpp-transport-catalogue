@@ -6,8 +6,10 @@
 namespace TransportGuide::IoRequests {
 using namespace std::literals;
 
-JsonReader::JsonReader(TransportGuide::BusinessLogic::TransportCatalogue& catalogue, std::istream& input_stream,
-        std::ostream& output_stream) : IoBase(catalogue), input_stream_(input_stream), output_stream_(output_stream) {
+JsonReader::JsonReader(renderer::MapRenderer& map_renderer,
+        TransportGuide::BusinessLogic::TransportCatalogue& catalogue, std::istream& input_stream,
+        std::ostream& output_stream) : IoBase(catalogue), RenderBase(map_renderer), input_stream_(input_stream)
+        , output_stream_(output_stream) {
 }
 
 void JsonReader::PreloadDocument() {
@@ -137,11 +139,14 @@ void JsonReader::SendAnswer() {
         else if (type_node == "Bus"s) {
             answer_array.push_back(GetBusRequestNode(node));
         }
+        else if (type_node == "Map"s) {
+            answer_array.push_back(GetMapRequestNode(node));
+        }
 //        else if (type_node.IsNull()) {
 //            continue;
 //        }
         else {
-            throw std::logic_error("Node key \"type\" must be count value \"Stop\" or \"Bus\"."s);
+            throw std::logic_error("Node key \"type\" must be count value \"Stop\" or \"Bus\" or \"Map\"."s);
         }
     }
     
@@ -164,7 +169,7 @@ json::Node JsonReader::GetStopRequestNode(const json::Node& node) {
     if (stop_info.has_value() /*&& !stop_info.value().buses.empty()*/) {
         json::Array buses;
         for (const auto& bus : stop_info.value().buses){
-            buses.emplace_back(bus->name);            //todo возможна ошибка из-за сортировки
+            buses.emplace_back(bus->name);
         }
         result_node["buses"] = buses;
     }
@@ -200,6 +205,17 @@ json::Node JsonReader::GetBusRequestNode(const json::Node& node) {
     else {
         result_node["error_message"] = "not found"s;
     }
+    return result_node;
+}
+
+json::Node JsonReader::GetMapRequestNode(const json::Node& node) {
+    const json::Dict& node_dict = node.AsMap();
+    node_dict.count("id"s) ? 0 : throw std::logic_error("Json request node must be contains \"id\"."s);
+    node_dict.count("type"s) ? 0 : throw std::logic_error("Json request node must be contains \"type\"."s);
+    
+    json::Dict result_node;
+    result_node["request_id"] = node_dict.at("id");
+    result_node["map"] = Render();
     return result_node;
 }
 

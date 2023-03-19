@@ -6,9 +6,10 @@
 
 namespace TransportGuide::IoRequests {
 
-class JsonReader final : public IoBase, public IRenderSettings{
+class JsonReader final : public IoBase, public RenderBase{
 public:
-    JsonReader(BusinessLogic::TransportCatalogue& catalogue, std::istream& input_stream, std::ostream& output_stream);
+    JsonReader(renderer::MapRenderer& map_renderer, TransportGuide::BusinessLogic::TransportCatalogue& catalogue,
+            std::istream& input_stream, std::ostream& output_stream);
     void PreloadDocument() override;
     void LoadData() override;
     void SendAnswer() override;
@@ -23,6 +24,7 @@ private:
     void AddBusByNode(const json::Node* node_ptr);
     json::Node GetStopRequestNode(const json::Node& node);
     json::Node GetBusRequestNode(const json::Node& node);
+    json::Node GetMapRequestNode(const json::Node& node);
 };
 
 }

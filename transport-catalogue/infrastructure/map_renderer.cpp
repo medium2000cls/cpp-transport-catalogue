@@ -3,12 +3,6 @@
 #include <vector>
 #include "map_renderer.h"
 
-/*
- * В этом файле вы можете разместить код, отвечающий за визуализацию карты маршрутов в формате SVG.
- * Визуализация маршрутов вам понадобится во второй части итогового проекта.
- * Пока можете оставить файл пустым.
- */
-
 namespace TransportGuide::renderer {
 
 bool IsZero(double value) {
@@ -19,9 +13,7 @@ svg::Point SphereProjector::operator()(Domain::geo::Coordinates coords) const {
     return {(coords.lng - min_lon_) * zoom_coeff_ + padding_, (max_lat_ - coords.lat) * zoom_coeff_ + padding_};
 }
 
-MapRenderer::MapRenderer(const TransportGuide::BusinessLogic::TransportCatalogue& catalogue,
-        std::ostream& out) : catalogue_(catalogue), out(out) {}
-
+MapRenderer::MapRenderer(const TransportGuide::BusinessLogic::TransportCatalogue& catalogue) : catalogue_(catalogue) {}
 
 void MapRenderer::CreateDocument(RenderSettings settings) {
     const std::unordered_map<std::string_view, Domain::Bus*>& bus_catalog = catalogue_.GetBusNameCatalog();
@@ -188,7 +180,7 @@ void MapRenderer::CreateNameStop(svg::Document& document, const RenderSettings& 
     
 }
 
-void MapRenderer::Render() {
+void MapRenderer::Render(std::ostream& out) {
     document_.Render(out);
 }
 

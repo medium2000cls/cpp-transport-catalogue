@@ -102,15 +102,14 @@ struct RenderSettings {
 
 class MapRenderer {
 public:
-    MapRenderer(const TransportGuide::BusinessLogic::TransportCatalogue& catalogue, std::ostream& out);
+    MapRenderer(const TransportGuide::BusinessLogic::TransportCatalogue& catalogue);
     
     void CreateDocument(RenderSettings settings);
-    void Render();
+    void Render(std::ostream& out);
 protected:
     svg::Document GetDocument;
 private:
     const BusinessLogic::TransportCatalogue& catalogue_;
-    std::ostream& out;
     svg::Document document_;
     void CreatePolyline(svg::Document& document, const RenderSettings& settings, const std::set<std::string_view>& buses,
             const SphereProjector& sphere_projector);
