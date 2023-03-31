@@ -35,4 +35,6 @@ add_executable(cpp-transport-catalogue
         transport-catalogue/tests/tests.h
         transport-catalogue/tests/tests.cpp
         transport-catalogue/infrastructure/io_requests_base.h
-        transport-catalogue/infrastructure/io_requests_base.cpp)
+        transport-catalogue/infrastructure/io_requests_base.cpp
+        transport-catalogue/external/json_builder.h
+        transport-catalogue/external/json_builder.cpp)

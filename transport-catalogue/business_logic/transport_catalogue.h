@@ -12,7 +12,6 @@
 
 namespace TransportGuide::BusinessLogic {
 
-//todo Переписать все указатели на std::unique<!*!*!>
 class TransportCatalogue {
 public:
     TransportCatalogue() = default;

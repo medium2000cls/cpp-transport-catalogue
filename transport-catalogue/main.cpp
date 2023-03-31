@@ -6,7 +6,7 @@
 
 
 int main() {
-    //TransportGuide::Test::AllTests();
+    TransportGuide::Test::AllTests();
 
     TransportGuide::BusinessLogic::TransportCatalogue transport_catalogue{};
     TransportGuide::renderer::MapRenderer map_renderer(transport_catalogue);

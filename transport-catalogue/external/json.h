@@ -3,12 +3,15 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 #include <variant>
+
 
 namespace TransportGuide::json {
 
 class Node;
+
 using Array = std::vector<Node>;
 using Dict = std::map<std::string, Node>;
 
@@ -20,10 +23,15 @@ public:
 
 using NodeVariant = std::variant<std::nullptr_t, bool, int, double, std::string, Array, Dict>;
 
+class Builder;
+
 class Node final : private NodeVariant {
+    friend json::Builder;
+
 public:
     
     using variant::variant;
+    using Value = variant;
     
     [[nodiscard]] bool IsInt() const;
     [[nodiscard]] bool IsDouble() const; //Возвращает true, если в Node хранится int либо double.
@@ -38,25 +46,23 @@ public:
     
     int AsInt() const;
     bool AsBool() const;
-    double AsDouble() const; //Возвращает значение типа double, если внутри хранится double либо int.
-    // В последнем случае возвращается приведённое в double значение.
+    double AsDouble() const;
     const std::string& AsString() const;
     
     const Array& AsArray() const;
-    const Dict& AsMap() const; //Тот же Dict
+    const Dict& AsMap() const;
     
     bool operator==(const Node& rhs) const;
     bool operator!=(const Node& rhs) const;
     
-    template <typename T>
-    bool operator== (const T&& rhs) {
+    template<typename T>
+    bool operator==(const T&& rhs) {
         if (const auto* value_ptr = std::get_if<T>(*this)) {
             return *value_ptr == rhs;
         }
         return false;
     }
 };
-
 
 class Document {
 public:

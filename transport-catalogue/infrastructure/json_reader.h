@@ -3,6 +3,7 @@
 #include "../business_logic/transport_catalogue.h"
 #include "io_requests_base.h"
 #include "../external/json.h"
+#include "../external/json_builder.h"
 
 namespace TransportGuide::IoRequests {
 
