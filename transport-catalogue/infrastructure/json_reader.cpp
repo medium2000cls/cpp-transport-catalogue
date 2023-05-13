@@ -20,9 +20,9 @@ void JsonReader::PreloadDocument() {
 void JsonReader::LoadData() {
     assert(document_.GetRoot() != json::Node());
     const json::Node& root_node = document_.GetRoot();
-    if (!(root_node.IsMap() && root_node.AsMap().count("base_requests"))) { return; }
+    if (!(root_node.IsMap() && root_node.AsMap().count("base_requests"s))) { return; }
     
-    const json::Node& base_requests_node = root_node.AsMap().at("base_requests");
+    const json::Node& base_requests_node = root_node.AsMap().at("base_requests"s);
     if (!(base_requests_node.IsArray() && !base_requests_node.AsArray().empty())) { return; }
     
     std::vector<const json::Node*> stop_requests;
@@ -50,6 +50,12 @@ void JsonReader::LoadData() {
     std::for_each(bus_requests.begin(), bus_requests.end(), [this](const json::Node* node_ptr) {
         AddBusByNode(node_ptr);
     });
+    
+    if (root_node.IsMap() && root_node.AsMap().count("routing_settings"s)) {
+        Domain::RoutingSettings routing_settings = GetRoutingSettings(&root_node.AsMap().at("routing_settings"s));
+        catalogue_.ConstructUserRouteManager(routing_settings);
+    }
+    
 }
 
 void JsonReader::AddStopByNode(const json::Node* node_ptr) {
@@ -63,9 +69,9 @@ void JsonReader::AddStopByNode(const json::Node* node_ptr) {
     node_dict.count("latitude"s) ? 0 : throw std::logic_error("Json Stop node must be contains \"latitude\"."s);
     node_dict.count("longitude"s) ? 0 : throw std::logic_error("Json Stop node must be contains \"longitude\"."s);
     node_dict.count("road_distances"s) ? 0 : throw std::logic_error(
-        "Json Stop node must be contains \"road_distances\"."s);
+            "Json Stop node must be contains \"road_distances\"."s);
     node_dict.at("road_distances"s).IsMap() ? 0 : throw std::logic_error(
-        "Key \"road_distances\" must be Dictionary(key,Node)."s);
+            "Key \"road_distances\" must be Dictionary(key,Node)."s);
     
     std::string name = node_dict.at("name").AsString();
     double latitude = node_dict.at("latitude").AsDouble();
@@ -106,14 +112,27 @@ void JsonReader::AddBusByNode(const json::Node* node_ptr) {
         number_final_stop = route.size();
         std::vector<const Domain::Stop*> backward_route;
         std::copy(std::next(route.rbegin()), route.rend(),
-                  std::back_insert_iterator<std::vector<const Domain::Stop*>>(backward_route));
+                std::back_insert_iterator<std::vector<const Domain::Stop*>>(backward_route));
         std::move(backward_route.begin(), backward_route.end(),
-                  std::back_insert_iterator<std::vector<const Domain::Stop*>>(route));
+                std::back_insert_iterator<std::vector<const Domain::Stop*>>(route));
     }
     
     double calc_dist = catalogue_.GetBusCalculateLength(route);
     double real_dist = catalogue_.GetBusRealLength(route);
     catalogue_.InsertBus(Domain::Bus(bus_name, route, number_final_stop, calc_dist, real_dist));
+}
+
+Domain::RoutingSettings JsonReader::GetRoutingSettings(const json::Node* node_ptr) {
+    node_ptr->IsMap() ? 0 : throw std::logic_error("Json Bus node must be Dictionary(key,Node)."s);
+    
+    const json::Dict& node_dict = node_ptr->AsMap();
+    
+    node_dict.count("bus_wait_time"s) ? 0 : throw std::logic_error("Json routing_settings node must be contains \"bus_wait_time\"."s);
+    node_dict.at("bus_wait_time"s).IsInt() ? 0 : throw std::logic_error("Key \"bus_wait_time\" must be int."s);
+    node_dict.count("bus_velocity"s) ? 0 : throw std::logic_error("Json routing_settings node must be contains \"bus_velocity\"."s);
+    node_dict.at("bus_velocity"s).IsDouble() ? 0 : throw std::logic_error("Key \"bus_velocity\" must be double."s);
+    
+    return {.bus_wait_time = static_cast<Domain::TimeMinuts>(node_dict.at("bus_wait_time"s).AsInt()),.bus_velocity = node_dict.at("bus_velocity"s).AsDouble()};
 }
 
 void JsonReader::SendAnswer() {
@@ -136,6 +155,8 @@ void JsonReader::SendAnswer() {
             answer_array.push_back(GetBusRequestNode(node));
         } else if (type_node == "Map"s) {
             answer_array.push_back(GetMapRequestNode(node));
+        } else if (type_node == "Route"s) {
+            answer_array.push_back(GetRouteRequestNode(node));
         }
 //        else if (type_node.IsNull()) {
 //            continue;
@@ -172,7 +193,7 @@ json::Node JsonReader::GetStopRequestNode(const json::Node& node) {
     else {
         sub_dict_result.Key("error_message").Value("not found"s);
     }
-    auto result = sub_dict_result.EndDict().Build();
+    json::Node result = sub_dict_result.EndDict().Build();
     return result;
 }
 
@@ -196,7 +217,7 @@ json::Node JsonReader::GetBusRequestNode(const json::Node& node) {
     else {
         sub_result.Key("error_message").Value("not found"s);
     }
-    auto result = sub_result.EndDict().Build();
+    json::Node result = sub_result.EndDict().Build();
     return result;
 }
 
@@ -211,6 +232,54 @@ json::Node JsonReader::GetMapRequestNode(const json::Node& node) {
                                             .EndDict()
                                             .Build();
     return result_node;
+}
+
+json::Node JsonReader::GetRouteRequestNode(const json::Node& node) {
+    const json::Dict& node_dict = node.AsMap();
+    node_dict.count("id"s) ? 0 : throw std::logic_error("Json request node must be contains \"id\"."s);
+    node_dict.count("type"s) ? 0 : throw std::logic_error("Json request node must be contains \"type\"."s);
+    node_dict.count("from"s) ? 0 : throw std::logic_error("Json request node must be contains \"from\"."s);
+    node_dict.count("to"s) ? 0 : throw std::logic_error("Json request node must be contains \"to\"."s);
+    
+    std::string stop_from = node_dict.at("from"s).AsString();
+    std::string stop_to = node_dict.at("to"s).AsString();;
+    std::optional<Domain::UserRouteInfo> route_info = catalogue_.GetUserRouteManager().GetUserRouteInfo(stop_from, stop_to);
+    
+    json::Builder builder = json::Builder{};
+    auto sub_result = builder.StartDict().Key("request_id").Value(node_dict.at("id"));
+    
+    if (route_info.has_value()) {
+        
+        sub_result.Key("total_time").Value(route_info.value().total_time);
+        
+        auto sub_array_result = sub_result.Key("items").StartArray();
+        for (const auto& item : route_info.value().items) {
+            if (std::holds_alternative<Domain::UserRouteInfo::UserWait>(item)) {
+                const auto& user_wait = std::get<Domain::UserRouteInfo::UserWait>(item);
+                sub_array_result.StartDict()
+                                    .Key("type").Value("Wait")
+                                    .Key("stop_name").Value(user_wait.stop->name)
+                                    .Key("time").Value(user_wait.time)
+                                .EndDict();
+                
+            } else if (std::holds_alternative<Domain::UserRouteInfo::UserBus>(item)) {
+                const auto& user_bus = std::get<Domain::UserRouteInfo::UserBus>(item);
+                sub_array_result.StartDict()
+                                    .Key("type").Value("Bus")
+                                    .Key("bus").Value(user_bus.bus->name)
+                                    .Key("span_count").Value(static_cast<int>(user_bus.span_count))
+                                    .Key("time").Value(user_bus.time)
+                                .EndDict();
+            }
+        }
+        sub_array_result.EndArray();
+    }
+    else {
+        sub_result.Key("error_message").Value("not found"s);
+    }
+    
+    json::Node result = sub_result.EndDict().Build();
+    return result;
 }
 
 renderer::RenderSettings JsonReader::GetRenderSettings() {
@@ -288,4 +357,5 @@ renderer::RenderSettings JsonReader::GetRenderSettings() {
                                              color_palette_variant};
     return render_settings;
 }
+
 }

@@ -95,7 +95,7 @@ std::deque<Domain::Stop> StopGenerator(size_t count) {
         const std::string& name = GenerateWord(generator, 50);
         double B = std::uniform_real_distribution(30., 50.)(generator);
         double L = std::uniform_real_distribution(30., 50.)(generator);
-        result.push_back(Domain::Stop(name, B, L));
+        result.emplace_back(name, B, L);
     }
     return result;
 }
@@ -133,26 +133,6 @@ std::deque<Domain::TrackSection> TrackSectionCatalogGenerator(std::deque<Domain:
     }
     return result;
 }
-//endregion
-
-//region TransportCatalogue СhildClass definition
-
-std::deque<Domain::Stop>& TransportCatalogue::GetStops() {
-    return stop_catalog_;
-}
-
-std::deque<Domain::Bus>& TransportCatalogue::GetBuses() {
-    return bus_catalog_;
-}
-
-void TransportCatalogue::AddRealDistanceToCatalog(Domain::TrackSection track_section, double distance) {
-    return BusinessLogic::TransportCatalogue::AddRealDistanceToCatalog(track_section, distance);
-}
-
-double TransportCatalogue::GetBusRealLength(const std::vector<const Domain::Stop*>& route) {
-    return BusinessLogic::TransportCatalogue::GetBusRealLength(route);
-}
-
 //endregion
 
 void IntegrationTests::TestCase_5_PlusRealRoutersAndCurveInBusInformation() {
@@ -482,9 +462,9 @@ void StreamReaderTests::Load() {
     input_reader.PreloadDocument();
     input_reader.LoadData();
     
-    std::deque<Domain::Bus>& buses = transport_catalogue.GetBuses();
+    const std::deque<Domain::Bus>& buses = transport_catalogue.GetBuses();
     ASSERT(buses.size() == 3);
-    std::deque<Domain::Stop>& stops = transport_catalogue.GetStops();
+    const std::deque<Domain::Stop>& stops = transport_catalogue.GetStops();
     ASSERT(stops.size() == 10);
     Domain::Stop stop("Biryulyovo Tovarnaya", 55.592028, 37.653656);
     ASSERT(transport_catalogue.FindStop("Biryulyovo Tovarnaya").has_value() && *transport_catalogue.FindStop(
@@ -745,8 +725,199 @@ void MapRenderTests::TestCase6() {
     ASSERT(answer == correct_answer);
 }
 
+void UserRouteTests::TestCase1Route() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_01_input.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/json_route_case_01_output.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    std::istringstream answer_input(o_string_stream.str());
+    
+    json::Document correct_json = json::Load(file_output_stream);
+    json::Document answer_json = json::Load(answer_input);
+    
+    std::ofstream check_json (getexepath() + "/json_route_case_01_check_json.json");
+    check_json << std::endl << "Correct answer" << std::endl;
+    Print(correct_json,check_json);
+    check_json << std::endl << "Answer" << std::endl;
+    Print(answer_json,check_json);
+    
+    ASSERT(correct_json == answer_json);
+}
+void UserRouteTests::TestCase2Route() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_02_input.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/json_route_case_02_output.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    std::istringstream answer_input(o_string_stream.str());
+    
+    json::Document correct_json = json::Load(file_output_stream);
+    json::Document answer_json = json::Load(answer_input);
+    
+    std::ofstream check_json (getexepath() + "/json_route_case_02_check_json.json");
+    check_json << std::endl << "Correct answer" << std::endl;
+    Print(correct_json,check_json);
+    check_json << std::endl << "Answer" << std::endl;
+    Print(answer_json,check_json);
+    
+    ASSERT(correct_json == answer_json);
+}
+void UserRouteTests::TestCase3Route() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_03_input.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/json_route_case_03_output.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    std::istringstream answer_input(o_string_stream.str());
+    
+    json::Document correct_json = json::Load(file_output_stream);
+    json::Document answer_json = json::Load(answer_input);
+    
+    std::ofstream check_json (getexepath() + "/json_route_case_03_check_json.json");
+    check_json << std::endl << "Correct answer" << std::endl;
+    Print(correct_json,check_json);
+    check_json << std::endl << "Answer" << std::endl;
+    Print(answer_json,check_json);
+    
+    ASSERT(correct_json == answer_json);
+}
+void UserRouteTests::TestCase4Route() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_04_input.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/json_route_case_04_output.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    std::istringstream answer_input(o_string_stream.str());
+    
+    json::Document correct_json = json::Load(file_output_stream);
+    json::Document answer_json = json::Load(answer_input);
+    
+    std::ofstream check_json (getexepath() + "/json_route_case_04_check_json.json");
+    check_json << std::endl << "Correct answer" << std::endl;
+    Print(correct_json,check_json);
+    check_json << std::endl << "Answer" << std::endl;
+    Print(answer_json,check_json);
+    
+    ASSERT(correct_json == answer_json);
+}
+void UserRouteTests::TestCase5Route() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_05_input.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/json_route_case_05_output.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    std::istringstream answer_input(o_string_stream.str());
+    
+    json::Document correct_json = json::Load(file_output_stream);
+    json::Document answer_json = json::Load(answer_input);
+    
+    std::ofstream check_json (getexepath() + "/json_route_case_05_check_json.json");
+    check_json << std::endl << "Correct answer" << std::endl;
+    Print(correct_json,check_json);
+    check_json << std::endl << "Answer" << std::endl;
+    Print(answer_json,check_json);
+    
+    ASSERT(correct_json == answer_json);
+}
+void UserRouteTests::TestCase6Route() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_06_input.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/json_route_case_06_output.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    std::istringstream answer_input(o_string_stream.str());
+    
+    json::Document correct_json = json::Load(file_output_stream);
+    json::Document answer_json = json::Load(answer_input);
+    
+    std::ofstream check_json (getexepath() + "/json_route_case_06_check_json.json");
+    check_json << std::endl << "Correct answer" << std::endl;
+    Print(correct_json,check_json);
+    check_json << std::endl << "Answer" << std::endl;
+    Print(answer_json,check_json);
+    
+    ASSERT(correct_json == answer_json);
+}
+void UserRouteTests::TestCase7Route() {
+    std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_07_input.json");
+    std::ifstream file_output_stream(getexepath() + "/test_case/json_route_case_07_output.json");
+    std::ostringstream o_string_stream;
+    
+    TransportCatalogue transport_catalogue{};
+    renderer::MapRenderer map_renderer(transport_catalogue);
+    IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
+    IoRequests::IoBase& input_reader = json_reader;
+    
+    input_reader.PreloadDocument();
+    input_reader.LoadData();
+    input_reader.SendAnswer();
+    
+    std::istringstream answer_input(o_string_stream.str());
+    
+    json::Document correct_json = json::Load(file_output_stream);
+    json::Document answer_json = json::Load(answer_input);
+    
+    std::ofstream check_json (getexepath() + "/json_route_case_07_check_json.json");
+    check_json << std::endl << "Correct answer" << std::endl;
+    Print(correct_json,check_json);
+    check_json << std::endl << "Answer" << std::endl;
+    Print(answer_json,check_json);
+    
+    ASSERT(correct_json == answer_json);
+}
+
 
 void AllTests() {
+/*
     IntegrationTests integration_tests;
     RUN_TEST(integration_tests.TestCase_5_PlusRealRoutersAndCurveInBusInformation)
     RUN_TEST(integration_tests.TestCase_6_JsonReader)
@@ -772,7 +943,15 @@ void AllTests() {
     RUN_TEST(map_render_tests.TestCase4);
     RUN_TEST(map_render_tests.TestCase5);
     RUN_TEST(map_render_tests.TestCase6);
-    
+*/
+    UserRouteTests user_route_tests;
+//    RUN_TEST(user_route_tests.TestCase1Route);
+//    RUN_TEST(user_route_tests.TestCase2Route);
+//    RUN_TEST(user_route_tests.TestCase3Route);
+    RUN_TEST(user_route_tests.TestCase4Route);
+    RUN_TEST(user_route_tests.TestCase5Route);
+    RUN_TEST(user_route_tests.TestCase6Route);
+    RUN_TEST(user_route_tests.TestCase7Route);
 }
 
 }

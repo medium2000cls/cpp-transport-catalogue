@@ -7,6 +7,7 @@
 #include "transport_catalogue.h"
 #include "../domain/geo.h"
 #include "../domain/domain.h"
+#include "../external/router.h"
 
 namespace TransportGuide::BusinessLogic {
 using namespace std::literals;
@@ -47,7 +48,7 @@ Domain::Stop* TransportCatalogue::InsertStop(const Domain::Stop& stop) {
     return stop_ptr;
 }
 
-std::optional<const Domain::Bus*> TransportCatalogue::FindBus(const std::string_view& name) const {
+std::optional<const Domain::Bus*> TransportCatalogue::FindBus(std::string_view name) const {
     if (bus_name_catalog_.count(name)) {
         return bus_name_catalog_.at(name);
     }
@@ -56,7 +57,7 @@ std::optional<const Domain::Bus*> TransportCatalogue::FindBus(const std::string_
     }
 }
 
-std::optional<const Domain::Stop*> TransportCatalogue::FindStop(const std::string_view& name) const {
+std::optional<const Domain::Stop*> TransportCatalogue::FindStop(std::string_view name) const {
     if (stop_name_catalog_.count(name)) {
         return stop_name_catalog_.at(name);
     }
@@ -83,7 +84,7 @@ std::optional<Domain::BusInfo> TransportCatalogue::GetBusInfo(
     return std::nullopt;
 }
 
-std::optional<Domain::BusInfo> TransportCatalogue::GetBusInfo(const std::string_view& bus_name) const {
+std::optional<Domain::BusInfo> TransportCatalogue::GetBusInfo(std::string_view bus_name) const {
     auto bus = FindBus(bus_name);
     if (bus.has_value()) {
         return TransportCatalogue::GetBusInfo(bus.value());
@@ -107,8 +108,7 @@ std::optional<Domain::StopInfo> TransportCatalogue::GetStopInfo(
     }
 }
 
-std::optional<Domain::StopInfo> TransportCatalogue::GetStopInfo(
-        const std::string_view& stop_name) const {
+std::optional<Domain::StopInfo> TransportCatalogue::GetStopInfo(std::string_view stop_name) const {
     auto stop = FindStop(stop_name);
     if (stop.has_value()) {
         return TransportCatalogue::GetStopInfo(stop.value());
@@ -122,8 +122,8 @@ void TransportCatalogue::AddRealDistanceToCatalog(Domain::TrackSection track_sec
     real_distance_catalog_[track_section] = distance;
 }
 
-void TransportCatalogue::AddRealDistanceToCatalog(const Domain::Stop* left,
-        const Domain::Stop* right, double distance) {
+void TransportCatalogue::AddRealDistanceToCatalog(const Domain::Stop* left, const Domain::Stop* right,
+        double distance) {
     AddRealDistanceToCatalog({left, right}, distance);
 }
 
@@ -153,6 +153,19 @@ double TransportCatalogue::GetBusRealLength(const std::vector<const Domain::Stop
             compute_route_dist);
 }
 
+
+const std::deque<Domain::Stop>& TransportCatalogue::GetStops() const {
+    return stop_catalog_;
+}
+
+const std::deque<Domain::Bus>& TransportCatalogue::GetBuses() const {
+    return bus_catalog_;
+}
+
+
+//endregion
+
+//region Protected section TransportCatalogue
 //endregion
 
 //region Private section TransportCatalogue
@@ -195,17 +208,27 @@ std::optional<double> TransportCatalogue::GetRealDistance(Domain::TrackSection t
     return std::nullopt;
 }
 
-std::optional<double> TransportCatalogue::GetRealDistance(const Domain::Stop* left,
-        const Domain::Stop* right) const {
+std::optional<double> TransportCatalogue::GetRealDistance(const Domain::Stop* left, const Domain::Stop* right) const {
     return TransportCatalogue::GetRealDistance({left, right});
+}
+
+double TransportCatalogue::GetDistance(Domain::TrackSection track_section) const {
+    std::optional<double> dist = GetRealDistance(track_section);
+    if (dist.has_value()) {
+        return dist.value();
+    }
+    return GetCalculatedDistance(track_section);
+}
+
+double TransportCatalogue::GetDistance(const Domain::Stop* left, const Domain::Stop* right) const {
+    return GetDistance({left, right});
 }
 
 void TransportCatalogue::AddBusInStopBusesCatalog(const Domain::Bus* bus) {
     if (bus->route.empty()) { return; }
-    std::for_each(bus->route.begin(), std::prev(bus->route.end()),
-            [this, bus](const Domain::Stop* stop) {
-                stop_buses_catalog_[stop].insert(bus);
-            });
+    std::for_each(bus->route.begin(), std::prev(bus->route.end()), [this, bus](const Domain::Stop* stop) {
+        stop_buses_catalog_[stop].insert(bus);
+    });
 }
 
 void TransportCatalogue::EraseBusInStopBusesCatalog(const Domain::Bus* bus) {
@@ -232,6 +255,17 @@ const std::unordered_map<std::string_view, Domain::Bus*>& TransportCatalogue::Ge
 
 const std::unordered_map<std::string_view, Domain::Stop*>& TransportCatalogue::GetStopNameCatalog() const {
     return stop_name_catalog_;
+}
+
+const UserRouteManager& TransportCatalogue::GetUserRouteManager() const {
+    if (!user_route_manager_.has_value()) {
+        throw std::logic_error("UserRouteManager is not construct."s);
+    }
+    return *user_route_manager_;
+}
+
+void TransportCatalogue::ConstructUserRouteManager(Domain::RoutingSettings routing_settings) {
+    user_route_manager_.emplace(*this, routing_settings);
 }
 
 //endregion

@@ -7,6 +7,7 @@
 
 int main() {
     TransportGuide::Test::AllTests();
+/*
 
     TransportGuide::BusinessLogic::TransportCatalogue transport_catalogue{};
     TransportGuide::renderer::MapRenderer map_renderer(transport_catalogue);
@@ -17,5 +18,6 @@ int main() {
     input_reader.LoadData();
     input_reader.SendAnswer();
 
+*/
     return 0;
 }

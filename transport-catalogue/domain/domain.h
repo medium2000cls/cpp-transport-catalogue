@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <functional>
 #include <optional>
+#include <variant>
 
 namespace TransportGuide::Domain {
 
@@ -75,5 +76,38 @@ struct StopInfo {
     std::vector<const Bus*> buses;
     bool operator==(const StopInfo& rhs) const;
     bool operator!=(const StopInfo& rhs) const;
+};
+
+
+using TimeMinuts = double;
+using RouteEntity = std::variant<const Stop*, const Bus*>;
+
+struct RoutingSettings {
+    TimeMinuts bus_wait_time = 0;
+    double bus_velocity = 0;
+};
+
+struct TrackSectionInfo {
+    TrackSection track_section;
+    TimeMinuts time;
+    RouteEntity entity;
+};
+
+struct UserRouteInfo {
+    struct UserWait {
+        const Stop* stop;
+        TimeMinuts time;
+    };
+    
+    struct UserBus {
+        const Bus* bus;
+        size_t span_count;
+        TimeMinuts time;
+    };
+    
+    using RouteItems = std::vector<std::variant<UserWait, UserBus>>;
+    
+    TimeMinuts total_time;
+    RouteItems items;
 };
 }
