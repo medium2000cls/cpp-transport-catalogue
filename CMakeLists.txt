@@ -37,4 +37,4 @@ add_executable(cpp-transport-catalogue
         transport-catalogue/infrastructure/io_requests_base.h
         transport-catalogue/infrastructure/io_requests_base.cpp
         transport-catalogue/external/json_builder.h
-        transport-catalogue/external/json_builder.cpp transport-catalogue/external/router.h transport-catalogue/external/graph.h transport-catalogue/external/ranges.h transport-catalogue/business_logic/UserRouteManager.cpp transport-catalogue/business_logic/UserRouteManager.h)
+        transport-catalogue/external/json_builder.cpp transport-catalogue/external/router.h transport-catalogue/external/graph.h transport-catalogue/external/ranges.h transport-catalogue/business_logic/transport_router.cpp transport-catalogue/business_logic/transport_router.h)

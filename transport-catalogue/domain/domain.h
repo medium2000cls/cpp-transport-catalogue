@@ -88,8 +88,8 @@ struct RoutingSettings {
 };
 
 struct TrackSectionInfo {
-    TrackSection track_section;
     TimeMinuts time;
+    size_t span_count;
     RouteEntity entity;
 };
 

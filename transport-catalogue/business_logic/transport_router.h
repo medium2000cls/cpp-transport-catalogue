@@ -33,16 +33,15 @@ public:
 private:
     const TransportCatalogue& catalogue_;
     Domain::RoutingSettings routing_settings_;
-    std::optional<graph::Router<Domain::TimeMinuts>> router_ = std::nullopt;
+    std::optional<graph::Router<Domain::TimeMinuts>> router_;
     graph::DirectedWeightedGraph<Domain::TimeMinuts> graph_;
-    std::unordered_map<const Domain::Stop*, std::vector<graph::VertexId>> graph_stop_to_vertex_id_catalog_;
+    std::unordered_map<const Domain::Stop*, graph::VertexId> graph_stop_to_vertex_id_catalog_;
     std::unordered_map<graph::EdgeId, Domain::TrackSectionInfo> graph_edge_id_to_info_catalog_;
 
 private:
     void InitGraph();
     void AddBusesToGraph();
-    graph::VertexId AddStopToGraph(const Domain::Stop* stop);
-    void AddTrackSectionToGraph(graph::VertexId from, graph::VertexId to, const Domain::TrackSection& track_section, Domain::TimeMinuts time, const Domain::RouteEntity& entity);
+    void AddTrackSectionToGraph(graph::VertexId from, graph::VertexId to, Domain::TimeMinuts time, size_t span_count, const Domain::RouteEntity& entity);
     
     Domain::UserRouteInfo::RouteItems GetRouteItems(
             const TransportGuide::graph::Router<Domain::TimeMinuts>::RouteInfo& route_info) const;

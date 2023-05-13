@@ -27,7 +27,6 @@ public:
     DirectedWeightedGraph() = default;
     explicit DirectedWeightedGraph(size_t vertex_count);
     EdgeId AddEdge(const Edge<Weight>& edge);
-    VertexId AddVertex();
     
     size_t GetVertexCount() const;
     size_t GetEdgeCount() const;
@@ -39,12 +38,6 @@ private:
     std::vector<IncidenceList> incidence_lists_ = {};
 };
 
-
-template<typename Weight>
-VertexId DirectedWeightedGraph<Weight>::AddVertex() {
-    incidence_lists_.emplace_back();
-    return incidence_lists_.size() - 1;
-}
 
 template <typename Weight>
 DirectedWeightedGraph<Weight>::DirectedWeightedGraph(size_t vertex_count)

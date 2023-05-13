@@ -744,11 +744,11 @@ void UserRouteTests::TestCase1Route() {
     json::Document correct_json = json::Load(file_output_stream);
     json::Document answer_json = json::Load(answer_input);
     
-    std::ofstream check_json (getexepath() + "/json_route_case_01_check_json.json");
-    check_json << std::endl << "Correct answer" << std::endl;
-    Print(correct_json,check_json);
-    check_json << std::endl << "Answer" << std::endl;
-    Print(answer_json,check_json);
+//    std::ofstream check_json (getexepath() + "/json_route_case_01_check_json.json");
+//    check_json << std::endl << "Correct answer" << std::endl;
+//    Print(correct_json,check_json);
+//    check_json << std::endl << "Answer" << std::endl;
+//    Print(answer_json,check_json);
     
     ASSERT(correct_json == answer_json);
 }
@@ -771,11 +771,11 @@ void UserRouteTests::TestCase2Route() {
     json::Document correct_json = json::Load(file_output_stream);
     json::Document answer_json = json::Load(answer_input);
     
-    std::ofstream check_json (getexepath() + "/json_route_case_02_check_json.json");
-    check_json << std::endl << "Correct answer" << std::endl;
-    Print(correct_json,check_json);
-    check_json << std::endl << "Answer" << std::endl;
-    Print(answer_json,check_json);
+//    std::ofstream check_json (getexepath() + "/json_route_case_02_check_json.json");
+//    check_json << std::endl << "Correct answer" << std::endl;
+//    Print(correct_json,check_json);
+//    check_json << std::endl << "Answer" << std::endl;
+//    Print(answer_json,check_json);
     
     ASSERT(correct_json == answer_json);
 }
@@ -798,11 +798,11 @@ void UserRouteTests::TestCase3Route() {
     json::Document correct_json = json::Load(file_output_stream);
     json::Document answer_json = json::Load(answer_input);
     
-    std::ofstream check_json (getexepath() + "/json_route_case_03_check_json.json");
-    check_json << std::endl << "Correct answer" << std::endl;
-    Print(correct_json,check_json);
-    check_json << std::endl << "Answer" << std::endl;
-    Print(answer_json,check_json);
+//    std::ofstream check_json (getexepath() + "/json_route_case_03_check_json.json");
+//    check_json << std::endl << "Correct answer" << std::endl;
+//    Print(correct_json,check_json);
+//    check_json << std::endl << "Answer" << std::endl;
+//    Print(answer_json,check_json);
     
     ASSERT(correct_json == answer_json);
 }
@@ -825,11 +825,11 @@ void UserRouteTests::TestCase4Route() {
     json::Document correct_json = json::Load(file_output_stream);
     json::Document answer_json = json::Load(answer_input);
     
-    std::ofstream check_json (getexepath() + "/json_route_case_04_check_json.json");
-    check_json << std::endl << "Correct answer" << std::endl;
-    Print(correct_json,check_json);
-    check_json << std::endl << "Answer" << std::endl;
-    Print(answer_json,check_json);
+//    std::ofstream check_json (getexepath() + "/json_route_case_04_check_json.json");
+//    check_json << std::endl << "Correct answer" << std::endl;
+//    Print(correct_json,check_json);
+//    check_json << std::endl << "Answer" << std::endl;
+//    Print(answer_json,check_json);
     
     ASSERT(correct_json == answer_json);
 }
@@ -852,11 +852,11 @@ void UserRouteTests::TestCase5Route() {
     json::Document correct_json = json::Load(file_output_stream);
     json::Document answer_json = json::Load(answer_input);
     
-    std::ofstream check_json (getexepath() + "/json_route_case_05_check_json.json");
-    check_json << std::endl << "Correct answer" << std::endl;
-    Print(correct_json,check_json);
-    check_json << std::endl << "Answer" << std::endl;
-    Print(answer_json,check_json);
+//    std::ofstream check_json (getexepath() + "/json_route_case_05_check_json.json");
+//    check_json << std::endl << "Correct answer" << std::endl;
+//    Print(correct_json,check_json);
+//    check_json << std::endl << "Answer" << std::endl;
+//    Print(answer_json,check_json);
     
     ASSERT(correct_json == answer_json);
 }
@@ -879,11 +879,11 @@ void UserRouteTests::TestCase6Route() {
     json::Document correct_json = json::Load(file_output_stream);
     json::Document answer_json = json::Load(answer_input);
     
-    std::ofstream check_json (getexepath() + "/json_route_case_06_check_json.json");
-    check_json << std::endl << "Correct answer" << std::endl;
-    Print(correct_json,check_json);
-    check_json << std::endl << "Answer" << std::endl;
-    Print(answer_json,check_json);
+//    std::ofstream check_json (getexepath() + "/json_route_case_06_check_json.json");
+//    check_json << std::endl << "Correct answer" << std::endl;
+//    Print(correct_json,check_json);
+//    check_json << std::endl << "Answer" << std::endl;
+//    Print(answer_json,check_json);
     
     ASSERT(correct_json == answer_json);
 }
@@ -906,18 +906,17 @@ void UserRouteTests::TestCase7Route() {
     json::Document correct_json = json::Load(file_output_stream);
     json::Document answer_json = json::Load(answer_input);
     
-    std::ofstream check_json (getexepath() + "/json_route_case_07_check_json.json");
-    check_json << std::endl << "Correct answer" << std::endl;
-    Print(correct_json,check_json);
-    check_json << std::endl << "Answer" << std::endl;
-    Print(answer_json,check_json);
+//    std::ofstream check_json (getexepath() + "/json_route_case_07_check_json.json");
+//    check_json << std::endl << "Correct answer" << std::endl;
+//    Print(correct_json,check_json);
+//    check_json << std::endl << "Answer" << std::endl;
+//    Print(answer_json,check_json);
     
     ASSERT(correct_json == answer_json);
 }
 
 
 void AllTests() {
-/*
     IntegrationTests integration_tests;
     RUN_TEST(integration_tests.TestCase_5_PlusRealRoutersAndCurveInBusInformation)
     RUN_TEST(integration_tests.TestCase_6_JsonReader)
@@ -943,11 +942,10 @@ void AllTests() {
     RUN_TEST(map_render_tests.TestCase4);
     RUN_TEST(map_render_tests.TestCase5);
     RUN_TEST(map_render_tests.TestCase6);
-*/
     UserRouteTests user_route_tests;
-//    RUN_TEST(user_route_tests.TestCase1Route);
-//    RUN_TEST(user_route_tests.TestCase2Route);
-//    RUN_TEST(user_route_tests.TestCase3Route);
+    RUN_TEST(user_route_tests.TestCase1Route);
+    RUN_TEST(user_route_tests.TestCase2Route);
+    RUN_TEST(user_route_tests.TestCase3Route);
     RUN_TEST(user_route_tests.TestCase4Route);
     RUN_TEST(user_route_tests.TestCase5Route);
     RUN_TEST(user_route_tests.TestCase6Route);

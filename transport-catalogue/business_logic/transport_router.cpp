@@ -1,5 +1,5 @@
 #include <numeric>
-#include "UserRouteManager.h"
+#include "transport_router.h"
 #include "transport_catalogue.h"
 
 namespace TransportGuide::BusinessLogic {
@@ -24,8 +24,8 @@ void UserRouteManager::ConstructGraph() {
 
 std::optional<Domain::UserRouteInfo> UserRouteManager::GetUserRouteInfo(const Domain::Stop* stop_from,
         const Domain::Stop* stop_to) const {
-    graph::VertexId id_from = graph_stop_to_vertex_id_catalog_.at(stop_from).front();
-    graph::VertexId id_to = graph_stop_to_vertex_id_catalog_.at(stop_to).front();
+    graph::VertexId id_from = graph_stop_to_vertex_id_catalog_.at(stop_from);
+    graph::VertexId id_to = graph_stop_to_vertex_id_catalog_.at(stop_to);
     auto route_info = router_->BuildRoute(id_from, id_to);
     
     if (route_info.has_value()) {
@@ -42,29 +42,19 @@ std::optional<Domain::UserRouteInfo> UserRouteManager::GetUserRouteInfo(const Do
 Domain::UserRouteInfo::RouteItems UserRouteManager::GetRouteItems(const graph::Router<Domain::TimeMinuts>::RouteInfo& route_info) const {
     Domain::UserRouteInfo::RouteItems items;
     
-    std::optional<Domain::TrackSectionInfo> track_section_info_prev;
-    
     for (graph::EdgeId id : route_info.edges) {
         if (graph_edge_id_to_info_catalog_.count(id)) {
             Domain::TrackSectionInfo track_section_info = graph_edge_id_to_info_catalog_.at(id);
             
-            if (!track_section_info_prev.has_value() || std::holds_alternative<const Domain::Stop*>(track_section_info.entity)) {
+            if (std::holds_alternative<const Domain::Stop*>(track_section_info.entity)) {
                 items.emplace_back(Domain::UserRouteInfo::UserWait{ .stop = std::get<const Domain::Stop*>(track_section_info.entity),
                                                                     .time = track_section_info.time});
             }
-            else if (std::holds_alternative<const Domain::Bus*>(track_section_info_prev->entity) &&
-                    std::get<const Domain::Bus*>(track_section_info_prev->entity) == std::get<const Domain::Bus*>(track_section_info.entity)) {
-                auto& user_bus = std::get<Domain::UserRouteInfo::UserBus>(items.back());
-                user_bus.span_count += 1;
-                user_bus.time += track_section_info.time;
-            }
             else {
                 items.emplace_back(Domain::UserRouteInfo::UserBus{.bus = std::get<const Domain::Bus*>(track_section_info.entity),
-                                                                  .span_count = 1,
+                                                                  .span_count = track_section_info.span_count,
                                                                   .time = track_section_info.time});
             }
-            
-            track_section_info_prev = track_section_info;
         }
         else {
             throw std::range_error(
@@ -87,49 +77,48 @@ std::optional<Domain::UserRouteInfo> UserRouteManager::GetUserRouteInfo(std::str
 }
 
 void UserRouteManager::InitGraph() {
-    for (const Domain::Stop& stop : catalogue_.GetStops()) {
-        AddStopToGraph(&stop);
+    size_t vertex_count = catalogue_.GetStops().size() * 2;
+    graph_ = graph::DirectedWeightedGraph<Domain::TimeMinuts>(vertex_count);
+    
+    for (size_t i = 0; i < vertex_count; i+=2) {
+        
+        graph::EdgeId id = graph_.AddEdge({i, i + 1, routing_settings_.bus_wait_time});
+        const Domain::Stop* stop_ptr = &catalogue_.GetStops().at(i / 2);
+        graph_stop_to_vertex_id_catalog_[stop_ptr] = i;
+        graph_edge_id_to_info_catalog_[id] = {.time = routing_settings_.bus_wait_time, .span_count = 0, .entity = stop_ptr};
     }
 }
 
 void UserRouteManager::AddBusesToGraph() {
+    static const double MINUTES_PER_HOUR = 60.;
+    static const double METERS_PER_KMETERS = 1000.;
+    
     for (const Domain::Bus& bus : catalogue_.GetBuses()) {
-        std::optional<graph::VertexId> prev_imaginary;
-        Domain::TimeMinuts prev_time_drive;
-        
+        std::vector<std::pair<graph::VertexId, Domain::TimeMinuts>> traveled_stops;
         for (auto it = bus.route.begin(), it_end = std::prev(bus.route.end()); it != it_end; std::advance(it, 1)) {
             auto it_next = std::next(it);
-            const Domain::TrackSection track_section {*it, *it_next};
+            
+            graph::VertexId from = graph_stop_to_vertex_id_catalog_.at(*it) + 1;
+            graph::VertexId to = graph_stop_to_vertex_id_catalog_.at(*it_next);
+            
             //Время движения по секции маршрута
-            double track_section_distance = catalogue_.GetDistance(track_section);
-            static const double MINUTES_PER_HOUR = 60.;
-            static const double METERS_PER_KMETERS = 1000.;
+            double track_section_distance = catalogue_.GetDistance({*it, *it_next});
             const Domain::TimeMinuts time_drive = track_section_distance / (routing_settings_.bus_velocity * METERS_PER_KMETERS / MINUTES_PER_HOUR);
             
-            graph::VertexId from = graph_stop_to_vertex_id_catalog_.at(*it).front();
-            graph::VertexId imaginary = AddStopToGraph(*it); //добавляем мнимую остановку
-            AddTrackSectionToGraph(from, imaginary, track_section, routing_settings_.bus_wait_time, *it);
-            
-            graph::VertexId to = graph_stop_to_vertex_id_catalog_.at(*it_next).front();
-            AddTrackSectionToGraph(imaginary, to, track_section, time_drive, &bus);
-            
-            if (prev_imaginary) { AddTrackSectionToGraph(*prev_imaginary, imaginary, track_section, prev_time_drive, &bus); }
-            
-            prev_imaginary = imaginary;
-            prev_time_drive = time_drive;
+            AddTrackSectionToGraph(from, to, time_drive, 1,&bus);
+            for (size_t i = 0, traveled_stops_size = traveled_stops.size(); i < traveled_stops_size; ++i) {
+                auto& [old_from, old_time] = traveled_stops[i];
+                old_time += time_drive;
+                AddTrackSectionToGraph(old_from, to, old_time, traveled_stops_size + 1 - i ,&bus);
+            }
+            traveled_stops.emplace_back(from, time_drive);
         }
     }
 }
 
-graph::VertexId UserRouteManager::AddStopToGraph(const Domain::Stop* stop) {
-    graph::VertexId id = graph_.AddVertex();
-    graph_stop_to_vertex_id_catalog_[stop].push_back(id);
-    return id;
-}
-
-void UserRouteManager::AddTrackSectionToGraph(graph::VertexId from, graph::VertexId to, const Domain::TrackSection& track_section, Domain::TimeMinuts time, const Domain::RouteEntity& entity) {
+void UserRouteManager::AddTrackSectionToGraph(graph::VertexId from, graph::VertexId to, Domain::TimeMinuts time, size_t span_count, const Domain::RouteEntity& entity) {
     graph::EdgeId id = graph_.AddEdge({.from = from, .to = to, .weight = time});
-    graph_edge_id_to_info_catalog_.insert({id, {.track_section = track_section, .time =  time, .entity = entity}});
+    graph_edge_id_to_info_catalog_.insert({id, {.time =  time, .span_count = span_count, .entity = entity}});
 }
 
 } // TransportGuide::BusinessLogic
