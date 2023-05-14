@@ -16,12 +16,12 @@ namespace TransportGuide::BusinessLogic {
 
 class TransportCatalogue;
 
-class UserRouteManager {
+class TransportRouter {
 public:
     
-    explicit UserRouteManager(const TransportCatalogue& catalogue, Domain::RoutingSettings routing_settings);
+    explicit TransportRouter(const TransportCatalogue& catalogue, Domain::RoutingSettings routing_settings);
     /**Установить настройки прохождения маршрута*/
-    UserRouteManager& SetRoutingSettings(const Domain::RoutingSettings& routing_settings);
+    TransportRouter& SetRoutingSettings(const Domain::RoutingSettings& routing_settings);
     /**Сконструировать связи между остановками*/
     void ConstructGraph();
     

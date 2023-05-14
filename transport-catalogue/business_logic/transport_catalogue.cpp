@@ -183,9 +183,9 @@ void TransportCatalogue::ConstructUserRouteManager(Domain::RoutingSettings routi
     user_route_manager_.emplace(*this, routing_settings);
 }
 
-const UserRouteManager& TransportCatalogue::GetUserRouteManager() const {
+const TransportRouter& TransportCatalogue::GetUserRouteManager() const {
     if (!user_route_manager_.has_value()) {
-        throw std::logic_error("UserRouteManager is not construct."s);
+        throw std::logic_error("TransportRouter is not construct."s);
     }
     return *user_route_manager_;
 }

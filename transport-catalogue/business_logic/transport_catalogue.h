@@ -15,7 +15,7 @@
 
 namespace TransportGuide::BusinessLogic {
 
-class UserRouteManager;
+class TransportRouter;
 
 class TransportCatalogue {
 public:
@@ -60,7 +60,7 @@ public:
     
     void ConstructUserRouteManager(Domain::RoutingSettings routing_settings);
     
-    const UserRouteManager& GetUserRouteManager() const;
+    const TransportRouter& GetUserRouteManager() const;
 
 private:
     std::deque<Domain::Bus> bus_catalog_;
@@ -70,7 +70,7 @@ private:
     std::unordered_map<Domain::TrackSection, double, Domain::TrackSectionHasher> real_distance_catalog_;
     std::unordered_map<std::string_view, Domain::Bus*> bus_name_catalog_;
     std::unordered_map<const Domain::Stop*, std::unordered_set<const Domain::Bus*>> stop_buses_catalog_;
-    std::optional<UserRouteManager> user_route_manager_;
+    std::optional<TransportRouter> user_route_manager_;
     
 private:
     double GetCalculatedDistance(Domain::TrackSection track_section) const;

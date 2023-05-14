@@ -6,23 +6,23 @@ namespace TransportGuide::BusinessLogic {
 
 using namespace std::literals;
 
-UserRouteManager::UserRouteManager(const TransportCatalogue& catalogue,
+TransportRouter::TransportRouter(const TransportCatalogue& catalogue,
         Domain::RoutingSettings routing_settings) : catalogue_(catalogue), routing_settings_(routing_settings) {
     ConstructGraph();
 }
 
-UserRouteManager& UserRouteManager::SetRoutingSettings(const Domain::RoutingSettings& routing_settings) {
+TransportRouter& TransportRouter::SetRoutingSettings(const Domain::RoutingSettings& routing_settings) {
     routing_settings_ = routing_settings;
     return *this;
 }
 
-void UserRouteManager::ConstructGraph() {
+void TransportRouter::ConstructGraph() {
     InitGraph();
     AddBusesToGraph();
     router_.emplace(graph_);
 }
 
-std::optional<Domain::UserRouteInfo> UserRouteManager::GetUserRouteInfo(const Domain::Stop* stop_from,
+std::optional<Domain::UserRouteInfo> TransportRouter::GetUserRouteInfo(const Domain::Stop* stop_from,
         const Domain::Stop* stop_to) const {
     graph::VertexId id_from = graph_stop_to_vertex_id_catalog_.at(stop_from);
     graph::VertexId id_to = graph_stop_to_vertex_id_catalog_.at(stop_to);
@@ -39,7 +39,7 @@ std::optional<Domain::UserRouteInfo> UserRouteManager::GetUserRouteInfo(const Do
     return std::nullopt;
 }
 
-Domain::UserRouteInfo::RouteItems UserRouteManager::GetRouteItems(const graph::Router<Domain::TimeMinuts>::RouteInfo& route_info) const {
+Domain::UserRouteInfo::RouteItems TransportRouter::GetRouteItems(const graph::Router<Domain::TimeMinuts>::RouteInfo& route_info) const {
     Domain::UserRouteInfo::RouteItems items;
     
     for (graph::EdgeId id : route_info.edges) {
@@ -64,19 +64,19 @@ Domain::UserRouteInfo::RouteItems UserRouteManager::GetRouteItems(const graph::R
     return items;
 }
 
-std::optional<Domain::UserRouteInfo> UserRouteManager::GetUserRouteInfo(std::string_view stop_name_from,
+std::optional<Domain::UserRouteInfo> TransportRouter::GetUserRouteInfo(std::string_view stop_name_from,
         std::string_view stop_name_to) const {
     auto stop_from = catalogue_.FindStop(stop_name_from);
     auto stop_to = catalogue_.FindStop(stop_name_to);
     if (stop_from.has_value() && stop_to.has_value()) {
-        return UserRouteManager::GetUserRouteInfo(stop_from.value(), stop_to.value());
+        return TransportRouter::GetUserRouteInfo(stop_from.value(), stop_to.value());
     }
     else {
         return std::nullopt;
     }
 }
 
-void UserRouteManager::InitGraph() {
+void TransportRouter::InitGraph() {
     size_t vertex_count = catalogue_.GetStops().size() * 2;
     graph_ = graph::DirectedWeightedGraph<Domain::TimeMinuts>(vertex_count);
     
@@ -89,7 +89,7 @@ void UserRouteManager::InitGraph() {
     }
 }
 
-void UserRouteManager::AddBusesToGraph() {
+void TransportRouter::AddBusesToGraph() {
     static const double MINUTES_PER_HOUR = 60.;
     static const double METERS_PER_KMETERS = 1000.;
     
@@ -116,7 +116,7 @@ void UserRouteManager::AddBusesToGraph() {
     }
 }
 
-void UserRouteManager::AddTrackSectionToGraph(graph::VertexId from, graph::VertexId to, Domain::TimeMinuts time, size_t span_count, const Domain::RouteEntity& entity) {
+void TransportRouter::AddTrackSectionToGraph(graph::VertexId from, graph::VertexId to, Domain::TimeMinuts time, size_t span_count, const Domain::RouteEntity& entity) {
     graph::EdgeId id = graph_.AddEdge({.from = from, .to = to, .weight = time});
     graph_edge_id_to_info_catalog_.insert({id, {.time =  time, .span_count = span_count, .entity = entity}});
 }
