@@ -13,7 +13,6 @@ namespace TransportGuide::svg {
 using namespace std::literals;
 class Object;
 
-
 struct Rgb {
     Rgb() = default;
     Rgb(uint8_t red, uint8_t green, uint8_t blue);
@@ -31,7 +30,6 @@ struct Rgba {
     uint8_t blue = 0;
     double opacity = 1.;
 };
-
 
 using Color = std::variant<std::monostate, std::string, Rgb, Rgba>;
 

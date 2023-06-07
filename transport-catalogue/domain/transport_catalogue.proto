@@ -1,0 +1,67 @@
+syntax="proto3";
+
+package TransportGuide.Serialization;
+
+message Stop {
+  uint64 id = 1;
+  string name = 2;
+  double latitude = 3;
+  double longitude = 4;
+  bool is_fill = 5;
+}
+
+message Bus {
+  uint64 id = 1;
+  string name = 2;
+  repeated uint64 route = 3;
+  uint64 unique_stops_count = 4;
+  double calc_length = 5;
+  double real_length = 6;
+  uint64 number_final_stop_ = 7;
+}
+
+message CalculatedDistance {
+  uint64 from_stop_id = 1;
+  uint64 to_stop_id = 2;
+  double distance = 3;
+}
+
+message RealDistance {
+  uint64 from_stop_id = 1;
+  uint64 to_stop_id = 2;
+  double distance = 3;
+}
+
+message RoutingSettings {
+  double bus_wait_time = 1;
+  double bus_velocity = 2;
+}
+
+message PixelDelta {
+  double x = 1;
+  double y = 2;
+}
+
+message RenderSettings {
+  double width = 1;
+  double height = 2;
+  double padding = 3;
+  double line_width = 4;
+  double stop_radius = 5;
+  int32 bus_label_font_size = 6;
+  PixelDelta bus_label_offset = 7;
+  int32 stop_label_font_size = 8;
+  PixelDelta stop_label_offset = 9;
+  string underlayer_color = 10;
+  double underlayer_width = 11;
+  repeated string color_palette = 12;
+}
+
+message TransportCatalogue {
+  repeated Stop stops = 1;
+  repeated Bus buses = 2;
+  repeated CalculatedDistance calculated_distance_catalog = 3;
+  repeated RealDistance real_distance_catalog = 4;
+  RoutingSettings routing_settings = 5;
+  RenderSettings render_settings = 6;
+}

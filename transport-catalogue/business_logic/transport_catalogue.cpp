@@ -260,8 +260,44 @@ std::vector<const Domain::Bus*> TransportCatalogue::GetBusesByStop(
                 return lhs->name < rhs->name;
             });
 }
-
 //endregion
 
+SerializerTransportCatalogue::SerializerTransportCatalogue(TransportCatalogue& catalogue) : catalogue_(catalogue) {}
+
+std::deque<Domain::Bus>& SerializerTransportCatalogue::GetBusCatalog() {
+    return catalogue_.bus_catalog_;
+}
+
+std::deque<Domain::Stop>& SerializerTransportCatalogue::GetStopCatalog() {
+    return catalogue_.stop_catalog_;
+}
+
+std::unordered_map<std::string_view, Domain::Stop*>& SerializerTransportCatalogue::GetStopNameCatalog() {
+    return catalogue_.stop_name_catalog_;
+}
+
+std::unordered_map<Domain::TrackSection, double, Domain::TrackSectionHasher>& SerializerTransportCatalogue::GetCalculatedDistanceCatalog() {
+    return catalogue_.calculated_distance_catalog_;
+}
+
+std::unordered_map<Domain::TrackSection, double, Domain::TrackSectionHasher>& SerializerTransportCatalogue::GetRealDistanceCatalog() {
+    return catalogue_.real_distance_catalog_;
+}
+
+std::unordered_map<std::string_view, Domain::Bus*>& SerializerTransportCatalogue::GetBusNameCatalog() {
+    return catalogue_.bus_name_catalog_;
+}
+
+std::unordered_map<const Domain::Stop*, std::unordered_set<const Domain::Bus*>>& SerializerTransportCatalogue::GetStopBusesCatalog() {
+    return catalogue_.stop_buses_catalog_;
+}
+
+std::optional<TransportRouter>& SerializerTransportCatalogue::GetUserRouteManager() {
+    return catalogue_.user_route_manager_;
+}
+
+BusinessLogic::TransportCatalogue& SerializerTransportCatalogue::GetCatalogue() {
+    return catalogue_;
+}
 }
 

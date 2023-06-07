@@ -35,6 +35,7 @@ struct Bus {
     //Маршруты теперь хранят длины пути
     double calc_length;
     double real_length;
+    size_t number_final_stop_ = 0;
     explicit Bus(std::string name, const std::vector<const Stop*>& route, double calc_length, double real_length);
     explicit Bus(std::string name, const std::vector<const Stop*>& route, size_t number_final_stop, double calc_length, double real_length);
     ~Bus() = default;
@@ -45,10 +46,6 @@ struct Bus {
     std::vector<const Stop*> GetForwardRoute() const;
     bool operator==(const Bus& rhs) const;
     bool operator!=(const Bus& rhs) const;
-    
-private:
-    size_t number_final_stop_ = 0;
-    
 };
 
 
@@ -78,6 +75,23 @@ struct StopInfo {
     bool operator!=(const StopInfo& rhs) const;
 };
 
+
+using PixelDelta = std::pair<double, double>;
+
+struct RenderSettings {
+    double width = 600.0;
+    double height = 400.0;
+    double padding = 50.0;
+    double line_width = 14.0;
+    double stop_radius = 5.0;
+    int32_t bus_label_font_size = 20;
+    PixelDelta bus_label_offset = {7.0, 15.0};
+    int32_t stop_label_font_size = 20;
+    PixelDelta stop_label_offset = {7.0, -3.0};
+    std::string underlayer_color = "rgba(255,255,255,0.85)";
+    double underlayer_width = 3.0;
+    std::vector<std::string> color_palette = {"green", "rgb(255,160,0)", "red"};
+};
 
 using TimeMinuts = double;
 using RouteEntity = std::variant<const Stop*, const Bus*>;

@@ -15,7 +15,7 @@ svg::Point SphereProjector::operator()(Domain::geo::Coordinates coords) const {
 
 MapRenderer::MapRenderer(const TransportGuide::BusinessLogic::TransportCatalogue& catalogue) : catalogue_(catalogue) {}
 
-void MapRenderer::CreateDocument(RenderSettings settings) {
+void MapRenderer::CreateDocument(const Domain::RenderSettings& settings) {
     const std::unordered_map<std::string_view, Domain::Bus*>& bus_catalog = catalogue_.GetBusNameCatalog();
     const std::unordered_map<std::string_view, Domain::Stop*>& stop_catalog = catalogue_.GetStopNameCatalog();
     //Получаем все имена маршрутов
@@ -52,7 +52,11 @@ void MapRenderer::CreateDocument(RenderSettings settings) {
     document_ = std::move(document);
 }
 
-void MapRenderer::CreatePolyline(svg::Document& document, const RenderSettings& settings,
+void MapRenderer::CreateDocument() {
+    CreateDocument(render_settings_);
+}
+
+void MapRenderer::CreatePolyline(svg::Document& document, const Domain::RenderSettings& settings,
         const std::set<std::string_view>& buses, const SphereProjector& sphere_projector) {
     const std::unordered_map<std::string_view, Domain::Bus*>& bus_catalog = catalogue_.GetBusNameCatalog();
     GetFollowingIt get_following_color(settings.color_palette);
@@ -78,7 +82,7 @@ void MapRenderer::CreatePolyline(svg::Document& document, const RenderSettings& 
     }
 }
 
-void MapRenderer::CreateNameRoute(svg::Document& document, const RenderSettings& settings,
+void MapRenderer::CreateNameRoute(svg::Document& document, const Domain::RenderSettings& settings,
         const std::set<std::string_view>& buses, const SphereProjector& sphere_projector) {
     const std::unordered_map<std::string_view, Domain::Bus*>& bus_catalog = catalogue_.GetBusNameCatalog();
     GetFollowingIt get_following_color(settings.color_palette);
@@ -126,7 +130,7 @@ void MapRenderer::CreateNameRoute(svg::Document& document, const RenderSettings&
     }
 }
 
-void MapRenderer::CreateCircle(svg::Document& document, const RenderSettings& settings,
+void MapRenderer::CreateCircle(svg::Document& document, const Domain::RenderSettings& settings,
         const std::vector<Domain::geo::Coordinates>& stop_coordinates, const SphereProjector& sphere_projector) {
     //добавляю координаты в пикселях
     std::vector<svg::Point> stops_point;
@@ -140,7 +144,7 @@ void MapRenderer::CreateCircle(svg::Document& document, const RenderSettings& se
     }
 }
 
-void MapRenderer::CreateNameStop(svg::Document& document, const RenderSettings& settings,
+void MapRenderer::CreateNameStop(svg::Document& document, const Domain::RenderSettings& settings,
         const std::set<std::string_view>& stops, const SphereProjector& sphere_projector) {
     
     const std::unordered_map<std::string_view, Domain::Stop*>& stop_catalog = catalogue_.GetStopNameCatalog();
@@ -182,6 +186,14 @@ void MapRenderer::CreateNameStop(svg::Document& document, const RenderSettings& 
 
 void MapRenderer::Render(std::ostream& out) {
     document_.Render(out);
+}
+
+void MapRenderer::SetRenderSettings(Domain::RenderSettings render_settings) {
+    render_settings_ = std::forward<Domain::RenderSettings>(render_settings);
+}
+
+Domain::RenderSettings MapRenderer::GetRenderSettings() const {
+    return render_settings_;
 }
 
 } //namespace TransportGuide::renderer

@@ -45,23 +45,27 @@ void JsonReader::LoadData() {
         }
     }
     std::for_each(stop_requests.begin(), stop_requests.end(), [this](const json::Node* node_ptr) {
-        AddStopByNode(node_ptr);
+        AddStopByNode(*node_ptr);
     });
     std::for_each(bus_requests.begin(), bus_requests.end(), [this](const json::Node* node_ptr) {
-        AddBusByNode(node_ptr);
+        AddBusByNode(*node_ptr);
     });
     
     if (root_node.IsMap() && root_node.AsMap().count("routing_settings"s)) {
-        Domain::RoutingSettings routing_settings = GetRoutingSettings(&root_node.AsMap().at("routing_settings"s));
+        Domain::RoutingSettings routing_settings = GetRoutingSettings(root_node.AsMap().at("routing_settings"s));
         catalogue_.ConstructUserRouteManager(routing_settings);
     }
     
+    if (root_node.IsMap() && root_node.AsMap().count("render_settings"s)) {
+        Domain::RenderSettings render_settings = GetRenderSettings(root_node.AsMap().at("render_settings"s));
+        map_renderer_.SetRenderSettings(render_settings);
+    }
 }
 
-void JsonReader::AddStopByNode(const json::Node* node_ptr) {
-    node_ptr->IsMap() ? 0 : throw std::logic_error("Json Stop node must be Dictionary(key,Node)."s);
+void JsonReader::AddStopByNode(const json::Node& node_ptr) {
+    node_ptr.IsMap() ? 0 : throw std::logic_error("Json Stop node must be Dictionary(key,Node)."s);
     
-    const json::Dict& node_dict = node_ptr->AsMap();
+    const json::Dict& node_dict = node_ptr.AsMap();
     
     node_dict.count("type"s) ? 0 : throw std::logic_error("Json Stop node must be contains \"type\"."s);
     node_dict.at("type"s) == "Stop"s ? 0 : throw std::logic_error("Key \"type\" must be contains value \"Stop\"."s);
@@ -86,10 +90,10 @@ void JsonReader::AddStopByNode(const json::Node* node_ptr) {
     }
 }
 
-void JsonReader::AddBusByNode(const json::Node* node_ptr) {
-    node_ptr->IsMap() ? 0 : throw std::logic_error("Json Bus node must be Dictionary(key,Node)."s);
+void JsonReader::AddBusByNode(const json::Node& node_ptr) {
+    node_ptr.IsMap() ? 0 : throw std::logic_error("Json Bus node must be Dictionary(key,Node)."s);
     
-    const json::Dict& node_dict = node_ptr->AsMap();
+    const json::Dict& node_dict = node_ptr.AsMap();
     
     node_dict.count("type"s) ? 0 : throw std::logic_error("Json Bus node must be contains \"type\"."s);
     node_dict.at("type"s) == "Bus"s ? 0 : throw std::logic_error("Key \"type\" must be contains value \"Bus\"."s);
@@ -122,10 +126,10 @@ void JsonReader::AddBusByNode(const json::Node* node_ptr) {
     catalogue_.InsertBus(Domain::Bus(bus_name, route, number_final_stop, calc_dist, real_dist));
 }
 
-Domain::RoutingSettings JsonReader::GetRoutingSettings(const json::Node* node_ptr) {
-    node_ptr->IsMap() ? 0 : throw std::logic_error("Json Bus node must be Dictionary(key,Node)."s);
+Domain::RoutingSettings JsonReader::GetRoutingSettings(const json::Node& node_ptr) {
+    node_ptr.IsMap() ? 0 : throw std::logic_error("Json Bus node must be Dictionary(key,Node)."s);
     
-    const json::Dict& node_dict = node_ptr->AsMap();
+    const json::Dict& node_dict = node_ptr.AsMap();
     
     node_dict.count("bus_wait_time"s) ? 0 : throw std::logic_error("Json routing_settings node must be contains \"bus_wait_time\"."s);
     node_dict.at("bus_wait_time"s).IsInt() ? 0 : throw std::logic_error("Key \"bus_wait_time\" must be int."s);
@@ -282,15 +286,7 @@ json::Node JsonReader::GetRouteRequestNode(const json::Node& node) {
     return result;
 }
 
-renderer::RenderSettings JsonReader::GetRenderSettings() {
-    assert(document_.GetRoot() != json::Node());
-    
-    const json::Node& root_node = document_.GetRoot();
-    if (!(root_node.IsMap() && root_node.AsMap().count("render_settings"))) {
-        throw std::logic_error("Json document is not count \"render_settings\".");
-    }
-    
-    const json::Node& render_settings_node = root_node.AsMap().at("render_settings");
+Domain::RenderSettings JsonReader::GetRenderSettings(const json::Node& render_settings_node) {
     if (!(render_settings_node.IsMap() && !render_settings_node.AsMap().empty())) {
         throw std::logic_error("\"render_settings\" is empty.");
     }
@@ -343,7 +339,7 @@ renderer::RenderSettings JsonReader::GetRenderSettings() {
         throw std::logic_error("There is no color palette.");
     }
     
-    renderer::RenderSettings render_settings{map_render.at("width").AsDouble(), map_render.at("height").AsDouble(),
+    Domain::RenderSettings render_settings{map_render.at("width").AsDouble(), map_render.at("height").AsDouble(),
                                              map_render.at("padding").AsDouble(),
                                              map_render.at("line_width").AsDouble(),
                                              map_render.at("stop_radius").AsDouble(),
@@ -358,4 +354,24 @@ renderer::RenderSettings JsonReader::GetRenderSettings() {
     return render_settings;
 }
 
+std::filesystem::path JsonReader::GetOutputFilePath() const {
+    const json::Node& root_node = document_.GetRoot();
+    if (!(root_node.IsMap() &&
+          root_node.AsMap().count("serialization_settings"s) &&
+          root_node.AsMap().at("serialization_settings"s).IsMap() &&
+          root_node.AsMap().at("serialization_settings"s).AsMap().count("file"s) &&
+          root_node.AsMap().at("serialization_settings"s).AsMap().at("file"s).IsString() &&
+         !root_node.AsMap().at("serialization_settings"s).AsMap().at("file"s).AsString().empty())) {
+        throw std::logic_error("Json document is not count \"serialization_settings\".");
+    }
+    
+    const auto& file_path = root_node.AsMap().at("serialization_settings"s).AsMap().at("file"s).AsString();
+    
+    return {file_path};
 }
+
+std::filesystem::path JsonReader::GetInputFilePath() const {
+    return GetOutputFilePath();
+}
+
+}  // namespace TransportGuide::IoRequests

@@ -9,8 +9,6 @@
 #include <functional>
 #include <optional>
 #include "../domain/domain.h"
-#include "../external/graph.h"
-#include "../external/router.h"
 #include "transport_router.h"
 
 namespace TransportGuide::BusinessLogic {
@@ -18,6 +16,7 @@ namespace TransportGuide::BusinessLogic {
 class TransportRouter;
 
 class TransportCatalogue {
+    friend struct SerializerTransportCatalogue;
 public:
     TransportCatalogue() = default;
     /**Вставить маршрут, если маршрут с таким именем есть, то обновить данные*/
@@ -96,6 +95,25 @@ private:
     }
     
 };
+
+struct SerializerTransportCatalogue {
+public:
+    explicit SerializerTransportCatalogue(BusinessLogic::TransportCatalogue& catalogue);
+    virtual ~SerializerTransportCatalogue() = default;
+    
+    std::deque<Domain::Bus>& GetBusCatalog();
+    std::deque<Domain::Stop>& GetStopCatalog();
+    std::unordered_map<std::string_view, Domain::Stop*>& GetStopNameCatalog();
+    std::unordered_map<Domain::TrackSection, double, Domain::TrackSectionHasher>& GetCalculatedDistanceCatalog();
+    std::unordered_map<Domain::TrackSection, double, Domain::TrackSectionHasher>& GetRealDistanceCatalog();
+    std::unordered_map<std::string_view, Domain::Bus*>& GetBusNameCatalog();
+    std::unordered_map<const Domain::Stop*, std::unordered_set<const Domain::Bus*>>& GetStopBusesCatalog();
+    std::optional<TransportRouter>& GetUserRouteManager();
+    BusinessLogic::TransportCatalogue& GetCatalogue();
+private:
+    BusinessLogic::TransportCatalogue& catalogue_;
+};
+
 
 
 }

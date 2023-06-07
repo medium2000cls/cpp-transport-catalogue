@@ -1,6 +1,7 @@
 #pragma once
-
+#include <optional>
 #include "../business_logic/transport_catalogue.h"
+#include "../business_logic/transport_router.h"
 #include "../infrastructure/map_renderer.h"
 
 namespace TransportGuide::IoRequests {
@@ -18,13 +19,23 @@ protected:
 };
 
 struct RenderBase {
-public:
-    virtual renderer::RenderSettings GetRenderSettings() = 0;
 protected:
-    std::string Render();
     explicit RenderBase(renderer::MapRenderer& map_renderer);
     virtual ~RenderBase() = default;
+    virtual std::string Render();
+
+protected:
     renderer::MapRenderer& map_renderer_;
+};
+
+struct SerializerBase {
+public:
+    virtual void Serialize(std::ostream& output) = 0;
+    virtual void Deserialize(std::istream& input) = 0;
+protected:
+    explicit SerializerBase(BusinessLogic::SerializerTransportCatalogue& serializer_transport_catalogue);
+    virtual ~SerializerBase() = default;
+    BusinessLogic::SerializerTransportCatalogue serializer_catalogue_;
 };
 
 }

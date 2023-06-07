@@ -18,10 +18,11 @@ class TransportCatalogue;
 
 class TransportRouter {
 public:
-    
     explicit TransportRouter(const TransportCatalogue& catalogue, Domain::RoutingSettings routing_settings);
     /**Установить настройки прохождения маршрута*/
     TransportRouter& SetRoutingSettings(const Domain::RoutingSettings& routing_settings);
+    
+    Domain::RoutingSettings GetRoutingSettings() const;
     /**Сконструировать связи между остановками*/
     void ConstructGraph();
     
@@ -47,5 +48,7 @@ private:
             const TransportGuide::graph::Router<Domain::TimeMinuts>::RouteInfo& route_info) const;
     
 };
+
+
 
 } // TransportGuide::BusinessLogic

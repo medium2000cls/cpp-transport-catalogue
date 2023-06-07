@@ -203,11 +203,10 @@ void IntegrationTests::TestCase_7_MapRender() {
     renderer::MapRenderer map_renderer(transport_catalogue);
     IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
-    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.CreateDocument();
     map_renderer.Render(o_string_stream);
     
     std::string correct_answer_1 = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
@@ -542,11 +541,10 @@ void MapRenderTests::TestCase1() {
     renderer::MapRenderer map_renderer(transport_catalogue);
     IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
-    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.CreateDocument();
     map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str();
@@ -565,11 +563,10 @@ void MapRenderTests::TestCase2() {
     renderer::MapRenderer map_renderer(transport_catalogue);
     IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
-    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.CreateDocument();
     map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str();
@@ -588,11 +585,10 @@ void MapRenderTests::TestCase3() {
     renderer::MapRenderer map_renderer(transport_catalogue);
     IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
-    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.CreateDocument();
     map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str();
@@ -611,11 +607,10 @@ void MapRenderTests::TestCaseUnicnownStopPureCatalog() {
     renderer::MapRenderer map_renderer(transport_catalogue);
     IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
-    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.CreateDocument();
     map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str();
@@ -636,11 +631,10 @@ void MapRenderTests::TestCaseBigData() {
     renderer::MapRenderer map_renderer(transport_catalogue);
     IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_stream, o_string_stream);
     IoRequests::IoBase& input_reader = json_reader;
-    IoRequests::RenderBase& render_settings = json_reader;
     
     input_reader.PreloadDocument();
     input_reader.LoadData();
-    map_renderer.CreateDocument(render_settings.GetRenderSettings());
+    map_renderer.CreateDocument();
     map_renderer.Render(o_string_stream);
     
     auto answer = o_string_stream.str() + "\n";

@@ -77,47 +77,29 @@ private:
     double zoom_coeff_ = 0;
 };
 
-using PixelDelta = std::pair<double, double>;
-
-struct RenderSettings {
-    double width = 600.0;
-    double height = 400.0;
-    
-    double padding = 50.0;
-    
-    double line_width = 14.0;
-    double stop_radius = 5.0;
-    
-    int bus_label_font_size = 20;
-    PixelDelta bus_label_offset = {7.0, 15.0};
-    
-    int stop_label_font_size = 20;
-    PixelDelta stop_label_offset = {7.0, -3.0};
-    
-    svg::Color underlayer_color = "rgba(255,255,255,0.85)";
-    double underlayer_width = 3.0;
-    
-    std::vector<std::string> color_palette = {"green", "rgb(255,160,0)", "red"};
-};
-
 class MapRenderer {
 public:
     MapRenderer(const TransportGuide::BusinessLogic::TransportCatalogue& catalogue);
     
-    void CreateDocument(RenderSettings settings);
+    void CreateDocument(const Domain::RenderSettings& settings);
+    void CreateDocument();
     void Render(std::ostream& out);
-protected:
-    svg::Document GetDocument;
+    void SetRenderSettings(Domain::RenderSettings render_settings);
+    Domain::RenderSettings GetRenderSettings() const;
+
 private:
     const BusinessLogic::TransportCatalogue& catalogue_;
+    Domain::RenderSettings render_settings_;
     svg::Document document_;
-    void CreatePolyline(svg::Document& document, const RenderSettings& settings, const std::set<std::string_view>& buses,
+    
+private:
+    void CreatePolyline(svg::Document& document, const Domain::RenderSettings& settings, const std::set<std::string_view>& buses,
             const SphereProjector& sphere_projector);
-    void CreateNameRoute(svg::Document& document, const RenderSettings& settings,
+    void CreateNameRoute(svg::Document& document, const Domain::RenderSettings& settings,
             const std::set<std::string_view>& buses, const SphereProjector& sphere_projector);
-    void CreateCircle(svg::Document& document, const RenderSettings& settings,
+    void CreateCircle(svg::Document& document, const Domain::RenderSettings& settings,
             const std::vector<Domain::geo::Coordinates>& stop_coordinates, const SphereProjector& sphere_projector);
-    void CreateNameStop(svg::Document& document, const RenderSettings& settings,
+    void CreateNameStop(svg::Document& document, const Domain::RenderSettings& settings,
             const std::set<std::string_view>& stops, const SphereProjector& sphere_projector);
 };
 

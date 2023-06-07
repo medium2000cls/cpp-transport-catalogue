@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include "../business_logic/transport_catalogue.h"
 #include "io_requests_base.h"
 #include "../external/json.h"
@@ -14,16 +15,21 @@ public:
     void PreloadDocument() override;
     void LoadData() override;
     void SendAnswer() override;
-    renderer::RenderSettings GetRenderSettings() override;
+    [[nodiscard]] std::filesystem::path GetOutputFilePath() const;
+    [[nodiscard]] std::filesystem::path GetInputFilePath() const;
 
 
 private:
     std::istream& input_stream_;
     std::ostream& output_stream_;
     json::Document document_ = json::Document(json::Node());
-    void AddStopByNode(const json::Node* node_ptr);
-    void AddBusByNode(const json::Node* node_ptr);
-    Domain::RoutingSettings GetRoutingSettings(const json::Node* node_ptr);
+    
+
+private:
+    void AddStopByNode(const json::Node& node_ptr);
+    void AddBusByNode(const json::Node& node_ptr);
+    Domain::RenderSettings GetRenderSettings(const json::Node& node);
+    Domain::RoutingSettings GetRoutingSettings(const json::Node& node_ptr);
     json::Node GetStopRequestNode(const json::Node& node);
     json::Node GetBusRequestNode(const json::Node& node);
     json::Node GetMapRequestNode(const json::Node& node);

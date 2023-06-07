@@ -1,4 +1,5 @@
 #include <numeric>
+#include <utility>
 #include "transport_router.h"
 #include "transport_catalogue.h"
 
@@ -120,5 +121,10 @@ void TransportRouter::AddTrackSectionToGraph(graph::VertexId from, graph::Vertex
     graph::EdgeId id = graph_.AddEdge({.from = from, .to = to, .weight = time});
     graph_edge_id_to_info_catalog_.insert({id, {.time =  time, .span_count = span_count, .entity = entity}});
 }
+
+Domain::RoutingSettings TransportRouter::GetRoutingSettings() const {
+    return routing_settings_;
+}
+
 
 } // TransportGuide::BusinessLogic
