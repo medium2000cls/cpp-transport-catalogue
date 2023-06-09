@@ -127,4 +127,31 @@ Domain::RoutingSettings TransportRouter::GetRoutingSettings() const {
 }
 
 
+TransportRouter::TransportRouter (const TransportCatalogue& catalogue) : catalogue_(catalogue) {}
+
+SerializerTransportRouter::SerializerTransportRouter(TransportRouter& transport_router) : transport_router_(transport_router) {}
+
+Domain::RoutingSettings& SerializerTransportRouter::GetRoutingSettings() {
+    return transport_router_.routing_settings_;
+}
+
+TransportRouter SerializerTransportRouter::ConstructTransportRouter(const TransportCatalogue& catalogue) {
+    return TransportRouter(catalogue);
+}
+
+std::optional<graph::Router<Domain::TimeMinuts>>& SerializerTransportRouter::GetRouter() {
+    return transport_router_.router_;
+}
+
+graph::DirectedWeightedGraph<Domain::TimeMinuts>& SerializerTransportRouter::GetGraph() {
+    return transport_router_.graph_;
+}
+
+std::unordered_map<const Domain::Stop*, graph::VertexId>& SerializerTransportRouter::GetGraphStopToVertexIdCatalog() {
+    return transport_router_.graph_stop_to_vertex_id_catalog_;
+}
+
+std::unordered_map<graph::EdgeId, Domain::TrackSectionInfo>& SerializerTransportRouter::GetGraphEdgeIdToInfoCatalog() {
+    return transport_router_.graph_edge_id_to_info_catalog_;
+}
 } // TransportGuide::BusinessLogic

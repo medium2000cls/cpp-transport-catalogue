@@ -25,13 +25,15 @@ public:
     ~LogDuration() {
         using namespace std::chrono;
         using namespace std::literals;
-        
+        if (is_deleted) return;
         const auto end_time = Clock::now();
         const auto dur = end_time - start_time_;
         dst_stream_ << id_ << ": "sv << duration_cast<milliseconds>(dur).count() << " ms"sv << std::endl;
+        is_deleted = true;
     }
 
 private:
+    bool is_deleted = false;
     const std::string id_;
     const Clock::time_point start_time_ = Clock::now();
     std::ostream& dst_stream_;
@@ -146,6 +148,7 @@ public:
     void TestCase_5_PlusRealRoutersAndCurveInBusInformation();
     void TestCase_6_JsonReader();
     void TestCase_7_MapRender();
+    void TestCase_8_Serialization_Deserialization();
 };
 
 
@@ -191,7 +194,6 @@ public:
     void TestCase7Route();
     
 };
-
 void AllTests();
 
 }

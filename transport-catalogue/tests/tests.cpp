@@ -5,6 +5,7 @@
 #include "../infrastructure/stream_reader.h"
 #include "../domain/domain.h"
 #include "../infrastructure/json_reader.h"
+#include "../infrastructure/serialization.h"
 
 namespace TransportGuide::Test {
 using namespace std::literals;
@@ -236,14 +237,85 @@ void IntegrationTests::TestCase_7_MapRender() {
                                    "  <text fill=\"black\" x=\"550\" y=\"190.051\" dx=\"7\" dy=\"-3\" font-size=\"20\" font-family=\"Verdana\">Ulitsa Lizy Chaikinoi</text>\n"
                                    "</svg>"s;
     auto answer = o_string_stream.str();
-/*
-    std::cout << correct_answer_1 << std::endl;
-    std::cout << std::endl;
-    std::cout << answer << std::endl;
-*/
+    /*
+        std::cout << correct_answer_1 << std::endl;
+        std::cout << std::endl;
+        std::cout << answer << std::endl;
+    */
     
     ASSERT(answer == correct_answer_1);
     
+}
+
+void IntegrationTests::TestCase_8_Serialization_Deserialization() {
+    std::ifstream file_input_make_base_stream(getexepath() + "/test_case/s14_3_opentest_3_make_base.json");
+    std::ifstream file_input_process_requests_stream(getexepath() + "/test_case/s14_3_opentest_3_process_requests.json");
+    std::ifstream file_answer_stream(getexepath() + "/test_case/s14_3_opentest_3_answer.json");
+    std::ostringstream o_string_stream_make_base;
+    std::ostringstream o_string_stream_process_requests;
+    
+    //make_base
+    {
+        LogDuration xs("Construct + serialization time");
+        LogDuration x("Construct time");
+
+        //Бизнес-логика
+        TransportGuide::BusinessLogic::TransportCatalogue transport_catalogue{};
+        
+        //Ввод-вывод
+        TransportGuide::renderer::MapRenderer map_renderer(transport_catalogue);
+        TransportGuide::IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_make_base_stream, o_string_stream_make_base);
+        
+        //Сериализация
+        TransportGuide::IoRequests::ProtoSerialization proto_serializer(transport_catalogue, map_renderer);
+        
+        //Приведение к базовым классам
+        TransportGuide::IoRequests::IoBase& input_reader = json_reader;
+        TransportGuide::IoRequests::ISerializer& serializer = proto_serializer;
+        
+        input_reader.PreloadDocument();
+        input_reader.LoadData();
+        x.~LogDuration();
+
+        std::ofstream output_file(json_reader.GetOutputFilePath(), std::ios::binary);
+        LogDuration xx("Serialization time");
+        serializer.Serialize(output_file);
+    }
+    //process_requests
+    {
+        LogDuration x("Deserialization time");
+        
+        TransportGuide::BusinessLogic::TransportCatalogue transport_catalogue{};
+        
+        //Ввод-вывод
+        TransportGuide::renderer::MapRenderer map_renderer(transport_catalogue);
+        TransportGuide::IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, file_input_process_requests_stream, o_string_stream_process_requests);
+        
+        //Сериализация
+        TransportGuide::IoRequests::ProtoSerialization proto_serializer(transport_catalogue, map_renderer);
+        
+        //Приведение к базовым классам
+        TransportGuide::IoRequests::IoBase& input_reader = json_reader;
+        TransportGuide::IoRequests::ISerializer& serializer = proto_serializer;
+        
+        input_reader.PreloadDocument();
+        std::ifstream input_file(json_reader.GetInputFilePath(), std::ios::binary);
+        serializer.Deserialize(input_file);
+        input_reader.SendAnswer();
+    }
+    
+    std::istringstream answer_input(o_string_stream_process_requests.str());
+    
+    json::Document correct_json = json::Load(file_answer_stream);
+    json::Document answer_json = json::Load(answer_input);
+    
+    //    std::ofstream check_json (getexepath() + "/json_route_case_07_check_json.json");
+    //    check_json << std::endl << "Correct answer" << std::endl;
+    //    Print(correct_json,check_json);
+    //    check_json << std::endl << "Answer" << std::endl;
+    //    Print(answer_json,check_json);
+    
+    ASSERT(correct_json == answer_json);
 }
 
 void TransportCatalogueTests::TrackSectionHasher() {
@@ -915,6 +987,7 @@ void AllTests() {
     RUN_TEST(integration_tests.TestCase_5_PlusRealRoutersAndCurveInBusInformation)
     RUN_TEST(integration_tests.TestCase_6_JsonReader)
     RUN_TEST(integration_tests.TestCase_7_MapRender)
+    RUN_TEST(integration_tests.TestCase_8_Serialization_Deserialization)
     TransportCatalogueTests transport_catalogue_tests;
     RUN_TEST(transport_catalogue_tests.TrackSectionHasher)
     RUN_TEST(transport_catalogue_tests.AddBus)

@@ -17,7 +17,14 @@ namespace TransportGuide::graph {
 template <typename Weight>
 class Router {
 private:
+    
     using Graph = DirectedWeightedGraph<Weight>;
+    struct RouteInternalData {
+        Weight weight;
+        std::optional<EdgeId> prev_edge;
+    };
+    
+    using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
 
 public:
     explicit Router(const Graph& graph);
@@ -26,16 +33,15 @@ public:
         Weight weight;
         std::vector<EdgeId> edges;
     };
-
+    
     std::optional<RouteInfo> BuildRoute(VertexId from, VertexId to) const;
+    
+    Router(const Graph& graph, RoutesInternalData routes_internal_data) : graph_(graph), routes_internal_data_(
+            std::move(routes_internal_data)) {}
 
 private:
-    struct RouteInternalData {
-        Weight weight;
-        std::optional<EdgeId> prev_edge;
-    };
-    using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
-
+    
+    
     void InitializeRoutesInternalData(const Graph& graph) {
         const size_t vertex_count = graph.GetVertexCount();
         for (VertexId vertex = 0; vertex < vertex_count; ++vertex) {
@@ -75,10 +81,30 @@ private:
         }
     }
 
+private:
     static constexpr Weight ZERO_WEIGHT{};
     const Graph& graph_;
     RoutesInternalData routes_internal_data_;
+
+public:
+    struct SerializerRouter final {
+        using RoutesInternalData = Router::RoutesInternalData;
+        using RouteInternalData = Router::RouteInternalData;
+        
+        explicit SerializerRouter(Router& router) : router_(router) {}
+        ~SerializerRouter() = default;
+        
+        static Router Construct(const Graph& graph, RoutesInternalData routes_internal_data) {
+            return Router(graph, std::move(routes_internal_data));
+        }
+        
+        RoutesInternalData& GetRoutesInternalData() { return router_.routes_internal_data_; }
+    
+    private:
+        Router& router_;
+    };
 };
+
 
 template <typename Weight>
 Router<Weight>::Router(const Graph& graph)

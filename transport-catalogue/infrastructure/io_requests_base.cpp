@@ -14,7 +14,3 @@ std::string TransportGuide::IoRequests::RenderBase::Render() {
     map_renderer_.Render(out);
     return out.str();
 }
-
-
-TransportGuide::IoRequests::SerializerBase::SerializerBase(BusinessLogic::SerializerTransportCatalogue& serializer_transport_catalogue)
-                                                                            : serializer_catalogue_(serializer_transport_catalogue) {}

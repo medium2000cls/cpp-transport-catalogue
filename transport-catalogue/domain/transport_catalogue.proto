@@ -26,6 +26,7 @@ message CalculatedDistance {
   double distance = 3;
 }
 
+
 message RealDistance {
   uint64 from_stop_id = 1;
   uint64 to_stop_id = 2;
@@ -35,6 +36,59 @@ message RealDistance {
 message RoutingSettings {
   double bus_wait_time = 1;
   double bus_velocity = 2;
+}
+
+message OptionalPrevEdge {
+  uint64 prev_edge = 1;
+}
+
+message RouteInternalData {
+  double weight = 1;
+  OptionalPrevEdge optional_prev_edge = 2;
+}
+
+message OptionalRouteInternalData {
+  RouteInternalData route_internal_data = 1;
+}
+
+message RepeatedRouteInternalData {
+  repeated OptionalRouteInternalData route_internal_data = 1;
+}
+
+message Router {
+  repeated RepeatedRouteInternalData repeated_route_internal_data = 1;
+}
+
+message Edge {
+  uint64 from = 1;
+  uint64 to = 2;
+  double weight = 3;
+}
+
+message IncidenceList {
+  repeated uint64 edge_id = 1;
+}
+
+message Graph {
+  repeated Edge edges = 1;
+  repeated IncidenceList incidence_lists = 2;
+}
+
+message TrackSectionInfo {
+  double time = 1;
+  uint64 span_count = 2;
+  oneof RouteEntity {
+    uint64 stop_id = 3;
+    uint64 bus_id = 4;
+  }
+}
+
+message TransportRouter {
+  RoutingSettings routing_settings = 1;
+  Graph graph = 2;
+  Router router = 3;
+  map<uint64, uint64> graph_stop_to_vertex_id_catalog = 4;
+  map<uint64, TrackSectionInfo> graph_edge_id_to_info_catalog_ = 5;
 }
 
 message PixelDelta {
@@ -62,6 +116,6 @@ message TransportCatalogue {
   repeated Bus buses = 2;
   repeated CalculatedDistance calculated_distance_catalog = 3;
   repeated RealDistance real_distance_catalog = 4;
-  RoutingSettings routing_settings = 5;
+  TransportRouter user_route_manager = 5;
   RenderSettings render_settings = 6;
 }

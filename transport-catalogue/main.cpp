@@ -25,18 +25,17 @@ int main(int argc, char* argv[]) {
 
     //Бизнес-логика
     TransportGuide::BusinessLogic::TransportCatalogue transport_catalogue{};
-    TransportGuide::BusinessLogic::SerializerTransportCatalogue serializer_transport_catalogue (transport_catalogue);
 
     //Ввод-вывод
     TransportGuide::renderer::MapRenderer map_renderer(transport_catalogue);
     TransportGuide::IoRequests::JsonReader json_reader(map_renderer, transport_catalogue, std::cin, std::cout);
 
     //Сериализация
-    TransportGuide::IoRequests::ProtoSerialization proto_serializer(serializer_transport_catalogue, map_renderer);
+    TransportGuide::IoRequests::ProtoSerialization proto_serializer(transport_catalogue, map_renderer);
 
     //Приведение к базовым классам
     TransportGuide::IoRequests::IoBase& input_reader = json_reader;
-    TransportGuide::IoRequests::SerializerBase& serializer = proto_serializer;
+    TransportGuide::IoRequests::ISerializer& serializer = proto_serializer;
 
     const std::string_view mode(argv[1]);
 

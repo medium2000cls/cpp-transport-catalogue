@@ -28,14 +28,12 @@ protected:
     renderer::MapRenderer& map_renderer_;
 };
 
-struct SerializerBase {
+struct ISerializer {
 public:
     virtual void Serialize(std::ostream& output) = 0;
     virtual void Deserialize(std::istream& input) = 0;
 protected:
-    explicit SerializerBase(BusinessLogic::SerializerTransportCatalogue& serializer_transport_catalogue);
-    virtual ~SerializerBase() = default;
-    BusinessLogic::SerializerTransportCatalogue serializer_catalogue_;
+    virtual ~ISerializer() = default;
 };
 
 }

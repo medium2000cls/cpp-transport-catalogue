@@ -96,10 +96,10 @@ private:
     
 };
 
-struct SerializerTransportCatalogue {
+struct SerializerTransportCatalogue final {
 public:
     explicit SerializerTransportCatalogue(BusinessLogic::TransportCatalogue& catalogue);
-    virtual ~SerializerTransportCatalogue() = default;
+    ~SerializerTransportCatalogue() = default;
     
     std::deque<Domain::Bus>& GetBusCatalog();
     std::deque<Domain::Stop>& GetStopCatalog();

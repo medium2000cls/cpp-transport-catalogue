@@ -17,7 +17,7 @@ struct Edge {
     Weight weight;
 };
 
-template <typename Weight>
+template<typename Weight> // time minutes -  double
 class DirectedWeightedGraph {
 private:
     using IncidenceList = std::vector<EdgeId>;
@@ -36,6 +36,21 @@ public:
 private:
     std::vector<Edge<Weight>> edges_;
     std::vector<IncidenceList> incidence_lists_ = {};
+
+public:
+    struct SerializerDirectedWeightedGraph final {
+        explicit SerializerDirectedWeightedGraph(DirectedWeightedGraph& graph) : graph_(graph) {}
+        
+        ~SerializerDirectedWeightedGraph() = default;
+        
+        std::vector<Edge<Weight>>& GetEdges() { return graph_.edges_; }
+        
+        std::vector<IncidenceList>& GetIncidenceLists() { return graph_.incidence_lists_; }
+    
+    private:
+        DirectedWeightedGraph& graph_;
+    };
+    
 };
 
 
