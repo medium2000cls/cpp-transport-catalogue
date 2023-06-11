@@ -108,7 +108,8 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
             }
             result_user_route_manager.mutable_graph()->CopyFrom(ser_graph);
         }
-        //Если есть Router серриализуем роутер
+        //Если есть Router серриализуем роутер (отключено в связи с требованиями тренажера)
+/*
         if (serializer_transport_router.GetRouter().has_value()) {
             Serialization::Router ser_router;
             TransportGuide::graph::Router<double>::SerializerRouter serializer_router(
@@ -129,6 +130,7 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
             }
             result_user_route_manager.mutable_router()->CopyFrom(ser_router);
         }
+*/
         // Сериализуем карту остановок и их ID (graph_stop_to_vertex_id_catalog)
         {
             for (const auto& [stop_id, vertex_id] : serializer_transport_router.GetGraphStopToVertexIdCatalog()) {
@@ -252,8 +254,9 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
                 serializer_graph.GetIncidenceLists().push_back(std::move(incidence_list_edges));
             }
         }
-        //Заполняем маршрутирезатор (Router), после заполнения графа
-        {
+        //Заполняем маршрутирезатор (Router), после заполнения графа (в зависимости от настроек сериализации роутер может заполняться или рассчитываться)
+        //Заполняем
+        if (parsed_user_route_manager.has_router()) {
             SerializerRouter::RoutesInternalData& routes_internal_data = serializer_router.GetRoutesInternalData();
             for (const auto& parsed_rep_r_inter_data : parsed_user_route_manager.router().repeated_route_internal_data()) {
                 std::vector<std::optional<SerializerRouter::RouteInternalData>> route_internal_data_list;
@@ -272,6 +275,10 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
                 }
                 routes_internal_data.push_back(std::move(route_internal_data_list));
             }
+        }
+        //Рассчитываем в конструкторе
+        else {
+            serializer_transport_router.GetRouter().emplace(serializer_transport_router.GetGraph());
         }
         //Заполняем каталог вертексов по остановке
         {
