@@ -17,7 +17,7 @@ message Bus {
   uint64 unique_stops_count = 4;
   double calc_length = 5;
   double real_length = 6;
-  uint64 number_final_stop_ = 7;
+  uint64 number_final_stop = 7;
 }
 
 message CalculatedDistance {
@@ -88,7 +88,7 @@ message TransportRouter {
   Graph graph = 2;
   Router router = 3;
   map<uint64, uint64> graph_stop_to_vertex_id_catalog = 4;
-  map<uint64, TrackSectionInfo> graph_edge_id_to_info_catalog_ = 5;
+  map<uint64, TrackSectionInfo> graph_edge_id_to_info_catalog = 5;
 }
 
 message PixelDelta {

@@ -31,7 +31,7 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
         ser_bus.set_unique_stops_count(bus.unique_stops_count);
         ser_bus.set_calc_length(bus.calc_length);
         ser_bus.set_real_length(bus.real_length);
-        ser_bus.set_number_final_stop_(bus.number_final_stop_);
+        ser_bus.set_number_final_stop(bus.number_final_stop_);
         result_catalogue.add_buses()->CopyFrom(ser_bus);
     }
     // Сериализация каталога посчитанных расстояний
@@ -87,6 +87,8 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
             ser_router.set_bus_wait_time(routing_settings.bus_wait_time);
             result_user_route_manager.mutable_routing_settings()->CopyFrom(ser_router);
         }
+        // (отключено в связи с требованиями тренажера)
+/*
         //Сериализуем граф
         {
             Serialization::Graph ser_graph;
@@ -108,8 +110,7 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
             }
             result_user_route_manager.mutable_graph()->CopyFrom(ser_graph);
         }
-        //Если есть Router серриализуем роутер (отключено в связи с требованиями тренажера)
-/*
+        //Если есть Router серриализуем роутер
         if (serializer_transport_router.GetRouter().has_value()) {
             Serialization::Router ser_router;
             TransportGuide::graph::Router<double>::SerializerRouter serializer_router(
@@ -130,7 +131,6 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
             }
             result_user_route_manager.mutable_router()->CopyFrom(ser_router);
         }
-*/
         // Сериализуем карту остановок и их ID (graph_stop_to_vertex_id_catalog)
         {
             for (const auto& [stop_id, vertex_id] : serializer_transport_router.GetGraphStopToVertexIdCatalog()) {
@@ -158,6 +158,8 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
                                          ->insert({edge_id, ser_track_section_info});
             }
         }
+*/
+        
         result_catalogue.mutable_user_route_manager()->CopyFrom(result_user_route_manager);
     }
     
@@ -191,7 +193,7 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
         }
         // создаем маршрут
         Domain::Bus* b_ptr = &serializer_catalogue.GetBusCatalog()
-                                                  .emplace_back(bus.name(), route, bus.number_final_stop_(),
+                                                  .emplace_back(bus.name(), route, bus.number_final_stop(),
                                                           bus.calc_length(), bus.real_length());
         
         //создаем список маршрутов у остановок
@@ -216,10 +218,14 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
                                      temp_stops_catalog.at(entity.to_stop_id())), entity.distance());
     }
     
-    //Если есть настройки маршрутов, зполняем менеджер маршрутов
-    if (parsed_catalog.has_user_route_manager()) {
-        const Serialization::TransportRouter& parsed_user_route_manager = parsed_catalog.user_route_manager();
-        
+    //Если есть настройки маршрутов, зполняем менеджер маршрутов (если в данных нет графа, то менеджер
+    // маршруьов рассчитывается обычным способом через конструктор)
+    const Serialization::TransportRouter& parsed_user_route_manager = parsed_catalog.user_route_manager();
+    bool check_graph = parsed_user_route_manager.has_graph() &&
+                       !parsed_user_route_manager.graph_stop_to_vertex_id_catalog().empty() &&
+                       !parsed_user_route_manager.graph_edge_id_to_info_catalog().empty();
+    
+    if (parsed_catalog.has_user_route_manager() && check_graph) {
         {
             BusinessLogic::TransportRouter transport_router = BusinessLogic::SerializerTransportRouter::ConstructTransportRouter(transport_catalogue_);
             serializer_catalogue.GetUserRouteManager().emplace(std::move(transport_router));
@@ -288,7 +294,7 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
         }
         //Заполняем каталог информации по ребрам
         {
-            for(const auto& [edge_id, parsed_track_section_info] : parsed_user_route_manager.graph_edge_id_to_info_catalog_()){
+            for(const auto& [edge_id, parsed_track_section_info] : parsed_user_route_manager.graph_edge_id_to_info_catalog()){
                 Domain::TrackSectionInfo track_section_info;
                 track_section_info.time = parsed_track_section_info.time();
                 track_section_info.span_count = parsed_track_section_info.span_count();
@@ -304,6 +310,13 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
                 serializer_transport_router.GetGraphEdgeIdToInfoCatalog().emplace(edge_id, track_section_info);
             }
         }
+    }
+    else if (parsed_catalog.has_user_route_manager()) {
+        Domain::RoutingSettings routing_settings{
+                parsed_user_route_manager.routing_settings().bus_wait_time(),
+                parsed_user_route_manager.routing_settings().bus_velocity()
+        };
+        serializer_catalogue.GetUserRouteManager().emplace(serializer_catalogue.GetCatalogue(), routing_settings);
     }
     
     //Заполняем настройки визуализации
