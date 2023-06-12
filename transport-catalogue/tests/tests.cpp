@@ -767,6 +767,7 @@ void MapRenderTests::TestCase5() {
     ASSERT(answer == correct_answer);
 }
 
+/*
 void MapRenderTests::TestCase6() {
     std::ifstream file_input_stream(getexepath() + "/test_case/maprender_case_final_opentest_3.json");
     std::ifstream file_output_stream(getexepath() + "/test_case/maprender_case_final_opentest_3_answer.json");
@@ -784,12 +785,15 @@ void MapRenderTests::TestCase6() {
     auto answer = o_string_stream.str();
     std::string correct_answer = GetTextFromStream(file_output_stream);
     
-    /*
+    */
+/*
         std::cout << correct_answer << std::endl << std::endl;
         std::cout << answer << std::endl << std::endl;
-    */
+    *//*
+
     ASSERT(answer == correct_answer);
 }
+*/
 
 void UserRouteTests::TestCase1Route() {
     std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_01_input.json");
@@ -953,6 +957,7 @@ void UserRouteTests::TestCase6Route() {
     
     ASSERT(correct_json == answer_json);
 }
+/*
 void UserRouteTests::TestCase7Route() {
     std::ifstream file_input_stream(getexepath() + "/test_case/json_route_case_07_input.json");
     std::ifstream file_output_stream(getexepath() + "/test_case/json_route_case_07_output.json");
@@ -980,6 +985,7 @@ void UserRouteTests::TestCase7Route() {
     
     ASSERT(correct_json == answer_json);
 }
+*/
 
 
 void AllTests() {
@@ -1008,7 +1014,7 @@ void AllTests() {
     RUN_TEST(map_render_tests.TestCaseBigData);
     RUN_TEST(map_render_tests.TestCase4);
     RUN_TEST(map_render_tests.TestCase5);
-    RUN_TEST(map_render_tests.TestCase6);
+    //RUN_TEST(map_render_tests.TestCase6); //Отключен ограничения в 8мб на платформе
     UserRouteTests user_route_tests;
     RUN_TEST(user_route_tests.TestCase1Route);
     RUN_TEST(user_route_tests.TestCase2Route);
@@ -1016,7 +1022,7 @@ void AllTests() {
     RUN_TEST(user_route_tests.TestCase4Route);
     RUN_TEST(user_route_tests.TestCase5Route);
     RUN_TEST(user_route_tests.TestCase6Route);
-    RUN_TEST(user_route_tests.TestCase7Route);
+    //RUN_TEST(user_route_tests.TestCase7Route);//Отключен ограничения в 8мб на платформе
 }
 
 }

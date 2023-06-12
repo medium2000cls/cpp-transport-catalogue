@@ -180,7 +180,7 @@ public:
     void TestCaseBigData();
     void TestCase4();
     void TestCase5();
-    void TestCase6();
+//    void TestCase6();
 };
 
 class UserRouteTests {
@@ -191,8 +191,8 @@ public:
     void TestCase4Route();
     void TestCase5Route();
     void TestCase6Route();
-    void TestCase7Route();
-    
+//    void TestCase7Route();
+
 };
 void AllTests();
 
