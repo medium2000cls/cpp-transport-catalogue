@@ -9,7 +9,7 @@ using namespace std::literals;
 
 TransportRouter::TransportRouter(const TransportCatalogue& catalogue,
         Domain::RoutingSettings routing_settings) : catalogue_(catalogue), routing_settings_(routing_settings) {
-    ConstructGraph();
+    ConstructRouter();
 }
 
 TransportRouter& TransportRouter::SetRoutingSettings(const Domain::RoutingSettings& routing_settings) {
@@ -17,7 +17,7 @@ TransportRouter& TransportRouter::SetRoutingSettings(const Domain::RoutingSettin
     return *this;
 }
 
-void TransportRouter::ConstructGraph() {
+void TransportRouter::ConstructRouter() {
     InitGraph();
     AddBusesToGraph();
     router_.emplace(graph_);
@@ -139,6 +139,11 @@ TransportRouter SerializerTransportRouter::ConstructTransportRouter(const Transp
     return TransportRouter(catalogue);
 }
 
+void SerializerTransportRouter::ConstructGraph() {
+    transport_router_.InitGraph();
+    transport_router_.AddBusesToGraph();
+}
+
 std::optional<graph::Router<Domain::TimeMinuts>>& SerializerTransportRouter::GetRouter() {
     return transport_router_.router_;
 }
@@ -154,4 +159,5 @@ std::unordered_map<const Domain::Stop*, graph::VertexId>& SerializerTransportRou
 std::unordered_map<graph::EdgeId, Domain::TrackSectionInfo>& SerializerTransportRouter::GetGraphEdgeIdToInfoCatalog() {
     return transport_router_.graph_edge_id_to_info_catalog_;
 }
+
 } // TransportGuide::BusinessLogic

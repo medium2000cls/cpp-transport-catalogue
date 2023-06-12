@@ -26,7 +26,7 @@ public:
     
     Domain::RoutingSettings GetRoutingSettings() const;
     /**Сконструировать связи между остановками*/
-    void ConstructGraph();
+    void ConstructRouter();
     
     /**Получить информацию об оптимальном маршруте с пересадками, по указателю на остановку начала и конца маршрута*/
     std::optional<Domain::UserRouteInfo> GetUserRouteInfo(const Domain::Stop* stop_from, const Domain::Stop* stop_to) const;
@@ -56,7 +56,7 @@ struct SerializerTransportRouter final {
     ~SerializerTransportRouter() = default;
     
     static TransportRouter ConstructTransportRouter(const TransportCatalogue& catalogue);
-    
+    void ConstructGraph();
     Domain::RoutingSettings& GetRoutingSettings();
     std::optional<graph::Router<Domain::TimeMinuts>>& GetRouter();
     graph::DirectedWeightedGraph<Domain::TimeMinuts>& GetGraph();

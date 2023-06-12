@@ -110,6 +110,7 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
             }
             result_user_route_manager.mutable_graph()->CopyFrom(ser_graph);
         }
+*/
         //Если есть Router серриализуем роутер
         if (serializer_transport_router.GetRouter().has_value()) {
             Serialization::Router ser_router;
@@ -131,13 +132,14 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
             }
             result_user_route_manager.mutable_router()->CopyFrom(ser_router);
         }
+/*
         // Сериализуем карту остановок и их ID (graph_stop_to_vertex_id_catalog)
         {
             for (const auto& [stop_id, vertex_id] : serializer_transport_router.GetGraphStopToVertexIdCatalog()) {
                 result_user_route_manager.mutable_graph_stop_to_vertex_id_catalog()
                                          ->insert({reinterpret_cast<uint64_t>(stop_id), vertex_id});
             }
-            
+
         }
         // Сериализуем карту ребер и Информацию о них (graph_edge_id_to_info_catalog)
         {
@@ -153,8 +155,8 @@ void TransportGuide::IoRequests::ProtoSerialization::Serialize([[maybe_unused]]s
                     ser_track_section_info.set_bus_id(
                             reinterpret_cast<uint64_t>(std::get<const Domain::Bus*>(track_section_info.entity)));
                 }
-                
-                result_user_route_manager.mutable_graph_edge_id_to_info_catalog_()
+
+                result_user_route_manager.mutable_graph_edge_id_to_info_catalog()
                                          ->insert({edge_id, ser_track_section_info});
             }
         }
@@ -218,14 +220,10 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
                                      temp_stops_catalog.at(entity.to_stop_id())), entity.distance());
     }
     
-    //Если есть настройки маршрутов, зполняем менеджер маршрутов (если в данных нет графа, то менеджер
-    // маршруьов рассчитывается обычным способом через конструктор)
-    const Serialization::TransportRouter& parsed_user_route_manager = parsed_catalog.user_route_manager();
-    bool check_graph = parsed_user_route_manager.has_graph() &&
-                       !parsed_user_route_manager.graph_stop_to_vertex_id_catalog().empty() &&
-                       !parsed_user_route_manager.graph_edge_id_to_info_catalog().empty();
-    
-    if (parsed_catalog.has_user_route_manager() && check_graph) {
+    //Если есть настройки маршрутов, зполняем менеджер маршрутов
+    if (parsed_catalog.has_user_route_manager()) {
+        const Serialization::TransportRouter& parsed_user_route_manager = parsed_catalog.user_route_manager();
+        
         {
             BusinessLogic::TransportRouter transport_router = BusinessLogic::SerializerTransportRouter::ConstructTransportRouter(transport_catalogue_);
             serializer_catalogue.GetUserRouteManager().emplace(std::move(transport_router));
@@ -250,8 +248,13 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
             serializer_transport_router.GetRoutingSettings().bus_wait_time = parsed_user_route_manager.routing_settings().bus_wait_time();
             serializer_transport_router.GetRoutingSettings().bus_velocity = parsed_user_route_manager.routing_settings().bus_velocity();
         }
-        //Заполняем граф
-        {
+        
+        //Заполняем граф (Проверяем, что данные присутствуют, иначе конструируем граф из каталога)
+        bool check_graph = parsed_user_route_manager.has_graph() &&
+                           !parsed_user_route_manager.graph_stop_to_vertex_id_catalog().empty() &&
+                           !parsed_user_route_manager.graph_edge_id_to_info_catalog().empty();
+        if (check_graph) {
+            //Заполняем граф
             for (const auto& edge : parsed_user_route_manager.graph().edges()) {
                 serializer_graph.GetEdges().push_back({edge.from(), edge.to(), edge.weight()});
             }
@@ -259,7 +262,33 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
                 std::vector<graph::EdgeId> incidence_list_edges(parsed_incidence_list.edge_id().begin(),parsed_incidence_list.edge_id().end());
                 serializer_graph.GetIncidenceLists().push_back(std::move(incidence_list_edges));
             }
+            
+            //Заполняем каталог вертексов по остановке
+            for(const auto& [stop_id,vertex_id] : parsed_user_route_manager.graph_stop_to_vertex_id_catalog()){
+                serializer_transport_router.GetGraphStopToVertexIdCatalog().emplace(temp_stops_catalog.at(stop_id),vertex_id);
+            }
+            //Заполняем каталог информации по ребрам
+            for(const auto& [edge_id, parsed_track_section_info] : parsed_user_route_manager.graph_edge_id_to_info_catalog()){
+                Domain::TrackSectionInfo track_section_info;
+                track_section_info.time = parsed_track_section_info.time();
+                track_section_info.span_count = parsed_track_section_info.span_count();
+                if (parsed_track_section_info.RouteEntity_case() == Serialization::TrackSectionInfo::kStopId) {
+                    track_section_info.entity = temp_stops_catalog.at(parsed_track_section_info.stop_id());
+                }
+                else if (parsed_track_section_info.RouteEntity_case() == Serialization::TrackSectionInfo::kBusId) {
+                    track_section_info.entity = temp_buses_catalog.at(parsed_track_section_info.bus_id());
+                }
+                else {
+                    throw std::logic_error("Неизвестный тип ребра");
+                }
+                serializer_transport_router.GetGraphEdgeIdToInfoCatalog().emplace(edge_id, track_section_info);
+            }
+            
         }
+        else {
+            serializer_transport_router.ConstructGraph();
+        }
+        
         //Заполняем маршрутирезатор (Router), после заполнения графа (в зависимости от настроек сериализации роутер может заполняться или рассчитываться)
         //Заполняем
         if (parsed_user_route_manager.has_router()) {
@@ -286,37 +315,6 @@ void TransportGuide::IoRequests::ProtoSerialization::Deserialize([[maybe_unused]
         else {
             serializer_transport_router.GetRouter().emplace(serializer_transport_router.GetGraph());
         }
-        //Заполняем каталог вертексов по остановке
-        {
-            for(const auto& [stop_id,vertex_id] : parsed_user_route_manager.graph_stop_to_vertex_id_catalog()){
-                serializer_transport_router.GetGraphStopToVertexIdCatalog().emplace(temp_stops_catalog.at(stop_id),vertex_id);
-            }
-        }
-        //Заполняем каталог информации по ребрам
-        {
-            for(const auto& [edge_id, parsed_track_section_info] : parsed_user_route_manager.graph_edge_id_to_info_catalog()){
-                Domain::TrackSectionInfo track_section_info;
-                track_section_info.time = parsed_track_section_info.time();
-                track_section_info.span_count = parsed_track_section_info.span_count();
-                if (parsed_track_section_info.RouteEntity_case() == Serialization::TrackSectionInfo::kStopId) {
-                    track_section_info.entity = temp_stops_catalog.at(parsed_track_section_info.stop_id());
-                }
-                else if (parsed_track_section_info.RouteEntity_case() == Serialization::TrackSectionInfo::kBusId) {
-                    track_section_info.entity = temp_buses_catalog.at(parsed_track_section_info.bus_id());
-                }
-                else {
-                    throw std::logic_error("Неизвестный тип ребра");
-                }
-                serializer_transport_router.GetGraphEdgeIdToInfoCatalog().emplace(edge_id, track_section_info);
-            }
-        }
-    }
-    else if (parsed_catalog.has_user_route_manager()) {
-        Domain::RoutingSettings routing_settings{
-                parsed_user_route_manager.routing_settings().bus_wait_time(),
-                parsed_user_route_manager.routing_settings().bus_velocity()
-        };
-        serializer_catalogue.GetUserRouteManager().emplace(serializer_catalogue.GetCatalogue(), routing_settings);
     }
     
     //Заполняем настройки визуализации

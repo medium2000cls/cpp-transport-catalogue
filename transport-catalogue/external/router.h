@@ -35,12 +35,11 @@ public:
     };
     
     std::optional<RouteInfo> BuildRoute(VertexId from, VertexId to) const;
-    
-    Router(const Graph& graph, RoutesInternalData routes_internal_data) : graph_(graph), routes_internal_data_(
-            std::move(routes_internal_data)) {}
 
 private:
     
+    Router(const Graph& graph, RoutesInternalData routes_internal_data) : graph_(graph), routes_internal_data_(
+            std::move(routes_internal_data)) {}
     
     void InitializeRoutesInternalData(const Graph& graph) {
         const size_t vertex_count = graph.GetVertexCount();
